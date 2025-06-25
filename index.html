@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电影院选座系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .cinema-section {
+            flex: 2;
+            min-width: 800px;
+        }
+
+        .control-section {
+            flex: 1;
+            min-width: 350px;
+        }
+
+        .screen {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            font-size: 1.5em;
+            font-weight: bold;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        #cinemaCanvas {
+            border: 3px solid #ddd;
+            border-radius: 10px;
+            background: #f8f9fa;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 2px solid #333;
+        }
+
+        .control-panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .control-panel h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.2);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+            margin: 5px;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);
+        }
+
+        .group-members {
+            margin-top: 15px;
+        }
+
+        .member-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .member-input input {
+            flex: 1;
+        }
+
+        .member-input button {
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+
+        .selected-seats {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #27ae60;
+        }
+
+        .selected-seats h4 {
+            color: #27ae60;
+            margin-bottom: 10px;
+        }
+
+        .seat-info {
+            font-size: 14px;
+            color: #2c3e50;
+        }
+
+        .config-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .config-section h3 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+
+        .cinema-config {
+            display: flex;
+            gap: 15px;
+            align-items: end;
+            flex-wrap: wrap;
+        }
+
+        .cinema-config .form-group {
+            flex: 1;
+            min-width: 120px;
+            margin-bottom: 10px;
+        }
+
+        .info-panel {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-panel h4 {
+            color: #0c5460;
+            margin-bottom: 10px;
+        }
+
+        .ticket-summary {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .price-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .total-price {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #e74c3c;
+            text-align: right;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 2px solid #dee2e6;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+
+            .cinema-section {
+                min-width: auto;
+            }
+
+            .control-section {
+                min-width: auto;
+            }
+
+            #cinemaCanvas {
+                width: 100%;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 电影院选座系统</h1>
+            <p>体验最佳的观影选座服务</p>
+        </div>
+
+        <div class="main-content">
+            <div class="cinema-section">
+                <div class="screen">🎥 银幕 SCREEN 🎥</div>
+                <canvas id="cinemaCanvas" width="800" height="600"></canvas>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #27ae60;"></div>
+                        <span>空座位</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #f1c40f;"></div>
+                        <span>已选座位</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #e74c3c;"></div>
+                        <span>已售座位</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #95a5a6;"></div>
+                        <span>不可选</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <!-- 影院配置 -->
+                <div class="config-section">
+                    <h3>🏛️ 影院配置</h3>
+                    <div class="cinema-config">
+                        <div class="form-group">
+                            <label for="totalSeats">总座位数</label>
+                            <select id="totalSeats">
+                                <option value="100">100座</option>
+                                <option value="200" selected>200座</option>
+                                <option value="300">300座</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="seatsPerRow">每排座位数</label>
+                            <input type="number" id="seatsPerRow" value="20" min="10" max="25">
+                        </div>
+                        <button class="btn" onclick="updateCinemaLayout()">更新布局</button>
+                    </div>
+                </div>
+
+                <!-- 选座信息 -->
+                <div class="selected-seats" id="selectedSeatsInfo">
+                    <h4>📍 已选座位</h4>
+                    <div class="seat-info" id="seatDetails">请选择座位</div>
+                </div>
+
+                <!-- 购票选项 -->
+                <div class="control-panel">
+                    <h3>🎫 购票选项</h3>
+                    <div class="form-group">
+                        <label for="ticketType">票种类型</label>
+                        <select id="ticketType" onchange="toggleTicketType()">
+                            <option value="individual">个人票</option>
+                            <option value="group">团体票</option>
+                        </select>
+                    </div>
+
+                    <!-- 个人票表单 -->
+                    <div id="individualForm">
+                        <div class="form-group">
+                            <label for="customerName">姓名</label>
+                            <input type="text" id="customerName" placeholder="请输入姓名">
+                        </div>
+                        <div class="form-group">
+                            <label for="customerAge">年龄</label>
+                            <input type="number" id="customerAge" placeholder="请输入年龄" min="1" max="120">
+                        </div>
+                    </div>
+
+                    <!-- 团体票表单 -->
+                    <div id="groupForm" style="display: none;">
+                        <div class="form-group">
+                            <label for="groupSize">团体人数 (最多20人)</label>
+                            <input type="number" id="groupSize" placeholder="请输入人数" min="2" max="20"
+                                onchange="updateGroupMembers()">
+                        </div>
+                        <div class="group-members" id="groupMembers"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <button class="btn btn-success" onclick="autoSelectSeats()">🤖 自动选座</button>
+                        <button class="btn" onclick="clearSelection()">🧹 清空选择</button>
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="control-panel">
+                    <h3>💰 票务操作</h3>
+                    <div class="info-panel">
+                        <h4>💡 操作说明</h4>
+                        <p><strong>手动选座：</strong> 点击座位进行单选</p>
+                        <p><strong>多选：</strong> 按住Ctrl键+点击座位</p>
+                        <p><strong>年龄限制：</strong></p>
+                        <p>• 少年(15岁以下)：不能坐前3排</p>
+                        <p>• 老年人(60岁以上)：不能坐后3排</p>
+                        <p>• 成年人：无限制</p>
+                    </div>
+
+                    <!-- 票价信息 -->
+                    <div class="ticket-summary">
+                        <h4>💵 票价信息</h4>
+                        <div class="price-info">
+                            <span>成人票：</span>
+                            <span>¥45</span>
+                        </div>
+                        <div class="price-info">
+                            <span>儿童票：</span>
+                            <span>¥25</span>
+                        </div>
+                        <div class="price-info">
+                            <span>老年票：</span>
+                            <span>¥35</span>
+                        </div>
+                        <div class="total-price" id="totalPrice">总计：¥0</div>
+                    </div>
+
+                    <div class="form-group">
+                        <button class="btn btn-warning" onclick="reserveTickets()">📝 预订票</button>
+                        <button class="btn btn-success" onclick="purchaseTickets()">💳 直接购票</button>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-danger" onclick="cancelReservation()">❌ 取消预订</button>
+                        <button class="btn btn-danger" onclick="refundTickets()">💸 退票</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let canvas, ctx;
+        let cinemaConfig = {
+            totalSeats: 200,
+            seatsPerRow: 20,
+            rows: 10
+        };
+        let seats = [];
+        let selectedSeats = [];
+        let reservedSeats = new Set();
+        let soldSeats = new Set();
+        let ctrlPressed = false;
+
+        // 座位状态常量
+        const SEAT_STATUS = {
+            AVAILABLE: 'available',
+            SELECTED: 'selected',
+            RESERVED: 'reserved',
+            SOLD: 'sold',
+            UNAVAILABLE: 'unavailable'
+        };
+
+        // 票价配置
+        const TICKET_PRICES = {
+            adult: 45,      // 成人票
+            child: 25,      // 儿童票  
+            senior: 35      // 老年票
+        };
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function () {
+            canvas = document.getElementById('cinemaCanvas');
+            ctx = canvas.getContext('2d');
+
+            initializeSeats();
+            drawCinema();
+            addEventListeners();
+
+            // 添加一些模拟的已售座位
+            addMockSoldSeats();
+        });
+
+        // 添加事件监听器
+        function addEventListeners() {
+            canvas.addEventListener('click', handleSeatClick);
+
+            // 监听Ctrl键
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Control') {
+                    ctrlPressed = true;
+                }
+            });
+
+            document.addEventListener('keyup', function (e) {
+                if (e.key === 'Control') {
+                    ctrlPressed = false;
+                }
+            });
+        }
+
+        // 初始化座位数据
+        function initializeSeats() {
+            seats = [];
+            cinemaConfig.rows = Math.ceil(cinemaConfig.totalSeats / cinemaConfig.seatsPerRow);
+
+            for (let row = 0; row < cinemaConfig.rows; row++) {
+                seats[row] = [];
+                for (let col = 0; col < cinemaConfig.seatsPerRow; col++) {
+                    const seatNumber = row * cinemaConfig.seatsPerRow + col + 1;
+                    if (seatNumber <= cinemaConfig.totalSeats) {
+                        seats[row][col] = {
+                            row: row + 1,
+                            col: col + 1,
+                            number: seatNumber,
+                            status: SEAT_STATUS.AVAILABLE,
+                            x: 0,
+                            y: 0,
+                            width: 0,
+                            height: 0
+                        };
+                    }
+                }
+            }
+        }
+
+        // 绘制影院布局
+        function drawCinema() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const canvasWidth = canvas.width;
+            const canvasHeight = canvas.height;
+            const margin = 50;
+            const seatSize = 25;
+            const seatGap = 3;
+
+            // 计算弧形参数
+            const centerX = canvasWidth / 2;
+            const startY = margin + 80;
+            const rowHeight = 45;
+
+            for (let row = 0; row < cinemaConfig.rows; row++) {
+                if (!seats[row]) continue;
+
+                // 计算弧形偏移
+                const arcOffset = Math.pow(row * 0.15, 2) * 20;
+                const rowWidth = (cinemaConfig.seatsPerRow * (seatSize + seatGap)) - seatGap;
+                const startX = centerX - rowWidth / 2 + arcOffset * (row % 2 === 0 ? -1 : 1) * 0.5;
+
+                for (let col = 0; col < cinemaConfig.seatsPerRow; col++) {
+                    if (!seats[row][col]) continue;
+
+                    const seat = seats[row][col];
+                    const x = startX + col * (seatSize + seatGap);
+                    const y = startY + row * rowHeight;
+
+                    // 更新座位坐标信息
+                    seat.x = x;
+                    seat.y = y;
+                    seat.width = seatSize;
+                    seat.height = seatSize;
+
+                    // 绘制座位
+                    drawSeat(seat, x, y, seatSize);
+
+                    // 绘制座位号
+                    ctx.fillStyle = '#2c3e50';
+                    ctx.font = '10px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`${seat.row}-${seat.col}`, x + seatSize / 2, y + seatSize / 2 + 3);
+                }
+            }
+
+            // 绘制排号
+            ctx.fillStyle = '#7f8c8d';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'left';
+
+            for (let row = 0; row < cinemaConfig.rows; row++) {
+                const y = startY + row * rowHeight + seatSize / 2 + 5;
+                ctx.fillText(`第${row + 1}排`, 10, y);
+            }
+        }
+
+        // 绘制单个座位
+        function drawSeat(seat, x, y, size) {
+            let color;
+
+            // 确定座位颜色
+            if (soldSeats.has(seat.number) || seat.status === SEAT_STATUS.SOLD) {
+                color = '#e74c3c'; // 红色 - 已售
+            } else if (reservedSeats.has(seat.number) || seat.status === SEAT_STATUS.RESERVED) {
+                color = '#e67e22'; // 橙色 - 已预订
+            } else if (selectedSeats.some(s => s.number === seat.number) || seat.status === SEAT_STATUS.SELECTED) {
+                color = '#f1c40f'; // 黄色 - 已选
+            } else if (seat.status === SEAT_STATUS.UNAVAILABLE) {
+                color = '#95a5a6'; // 灰色 - 不可选
+            } else {
+                color = '#27ae60'; // 绿色 - 空座
+            }
+
+            // 绘制座位背景
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, size, size);
+
+            // 绘制座位边框
+            ctx.strokeStyle = '#2c3e50';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y, size, size);
+
+            // 绘制座位细节（椅背）
+            ctx.fillStyle = 'rgba(0,0,0,0.1)';
+            ctx.fillRect(x, y, size, 5);
+        }
+
+        // 处理座位点击
+        function handleSeatClick(event) {
+            const rect = canvas.getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            const clickY = event.clientY - rect.top;
+
+            // 查找被点击的座位
+            for (let row = 0; row < seats.length; row++) {
+                if (!seats[row]) continue;
+                for (let col = 0; col < seats[row].length; col++) {
+                    if (!seats[row][col]) continue;
+
+                    const seat = seats[row][col];
+                    if (clickX >= seat.x && clickX <= seat.x + seat.width &&
+                        clickY >= seat.y && clickY <= seat.y + seat.height) {
+
+                        handleSeatSelection(seat);
+                        return;
+                    }
+                }
+            }
+        }
+
+        // 处理座位选择逻辑
+        function handleSeatSelection(seat) {
+            // 检查座位是否可选
+            if (soldSeats.has(seat.number) || reservedSeats.has(seat.number)) {
+                alert('该座位已被占用！');
+                return;
+            }
+
+            // 检查年龄限制
+            if (!checkAgeRestriction(seat)) {
+                return;
+            }
+
+            const isSelected = selectedSeats.some(s => s.number === seat.number);
+
+            if (ctrlPressed) {
+                // 多选模式
+                if (isSelected) {
+                    selectedSeats = selectedSeats.filter(s => s.number !== seat.number);
+                } else {
+                    selectedSeats.push(seat);
+                }
+            } else {
+                // 单选模式
+                if (isSelected) {
+                    selectedSeats = [];
+                } else {
+                    selectedSeats = [seat];
+                }
+            }
+
+            updateSelectedSeatsDisplay();
+            drawCinema();
+            updateTotalPrice();
+        }
+
+        // 检查年龄限制
+        function checkAgeRestriction(seat) {
+            const ticketType = document.getElementById('ticketType').value;
+
+            if (ticketType === 'individual') {
+                const age = parseInt(document.getElementById('customerAge').value);
+                if (!age) return true; // 如果没有输入年龄，允许选择
+
+                // 少年（15岁以下）不能坐前三排
+                if (age < 15 && seat.row <= 3) {
+                    alert('少年（15岁以下）不能坐前三排！');
+                    return false;
+                }
+
+                // 老年人（60岁以上）不能坐最后三排
+                if (age >= 60 && seat.row > cinemaConfig.rows - 3) {
+                    alert('老年人（60岁以上）不能坐最后三排！');
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // 自动选座
+        function autoSelectSeats() {
+            const ticketType = document.getElementById('ticketType').value;
+
+            if (ticketType === 'individual') {
+                autoSelectIndividualSeat();
+            } else {
+                autoSelectGroupSeats();
+            }
+        }
+
+        // 个人票自动选座
+        function autoSelectIndividualSeat() {
+            const name = document.getElementById('customerName').value.trim();
+            const age = parseInt(document.getElementById('customerAge').value);
+
+            if (!name || !age) {
+                alert('请先填写姓名和年龄！');
+                return;
+            }
+
+            selectedSeats = [];
+
+            // 根据年龄确定可选择的排数范围
+            let startRow = 1;
+            let endRow = cinemaConfig.rows;
+
+            if (age < 15) {
+                startRow = 4; // 少年不能坐前三排
+            } else if (age >= 60) {
+                endRow = cinemaConfig.rows - 3; // 老年人不能坐后三排
+            }
+
+            // 查找最佳座位（优先选择中间位置）
+            const preferredSeats = [];
+
+            for (let row = startRow; row <= endRow; row++) {
+                if (!seats[row - 1]) continue;
+
+                for (let col = 1; col <= cinemaConfig.seatsPerRow; col++) {
+                    const seat = seats[row - 1][col - 1];
+                    if (!seat) continue;
+
+                    if (!soldSeats.has(seat.number) && !reservedSeats.has(seat.number)) {
+                        // 计算座位到中心的距离作为优先级参考
+                        const centerCol = Math.ceil(cinemaConfig.seatsPerRow / 2);
+                        const centerRow = Math.ceil(cinemaConfig.rows / 2);
+                        const distance = Math.abs(seat.col - centerCol) + Math.abs(seat.row - centerRow);
+
+                        preferredSeats.push({ seat, distance });
+                    }
+                }
+            }
+
+            if (preferredSeats.length === 0) {
+                alert('没有符合年龄要求的可用座位！');
+                return;
+            }
+
+            // 选择距离中心最近的座位
+            preferredSeats.sort((a, b) => a.distance - b.distance);
+            selectedSeats = [preferredSeats[0].seat];
+
+            updateSelectedSeatsDisplay();
+            drawCinema();
+            updateTotalPrice();
+        }
+
+        // 团体票自动选座
+        function autoSelectGroupSeats() {
+            const groupSize = parseInt(document.getElementById('groupSize').value);
+
+            if (!groupSize || groupSize < 2 || groupSize > 20) {
+                alert('请输入有效的团体人数（2-20人）！');
+                return;
+            }
+
+            // 获取团体成员信息
+            const members = [];
+            for (let i = 0; i < groupSize; i++) {
+                const nameInput = document.getElementById(`memberName${i}`);
+                const ageInput = document.getElementById(`memberAge${i}`);
+
+                if (!nameInput || !ageInput || !nameInput.value.trim() || !ageInput.value) {
+                    alert('请填写完整的团体成员信息！');
+                    return;
+                }
+
+                members.push({
+                    name: nameInput.value.trim(),
+                    age: parseInt(ageInput.value)
+                });
+            }
+
+            selectedSeats = [];
+
+            // 确定团体的年龄限制
+            const hasChild = members.some(m => m.age < 15);
+            const hasSenior = members.some(m => m.age >= 60);
+
+            let startRow = 1;
+            let endRow = cinemaConfig.rows;
+
+            if (hasChild) {
+                startRow = 4; // 有少年，不能坐前三排
+            }
+            if (hasSenior) {
+                endRow = cinemaConfig.rows - 3; // 有老年人，不能坐后三排
+            }
+
+            // 查找连续的座位
+            for (let row = startRow; row <= endRow; row++) {
+                if (!seats[row - 1]) continue;
+
+                // 在每一排查找连续的空座位
+                for (let startCol = 1; startCol <= cinemaConfig.seatsPerRow - groupSize + 1; startCol++) {
+                    let consecutiveSeats = [];
+                    let allAvailable = true;
+
+                    for (let i = 0; i < groupSize; i++) {
+                        const seat = seats[row - 1][startCol - 1 + i];
+                        if (!seat || soldSeats.has(seat.number) || reservedSeats.has(seat.number)) {
+                            allAvailable = false;
+                            break;
+                        }
+                        consecutiveSeats.push(seat);
+                    }
+
+                    if (allAvailable) {
+                        selectedSeats = consecutiveSeats;
+                        updateSelectedSeatsDisplay();
+                        drawCinema();
+                        updateTotalPrice();
+                        return;
+                    }
+                }
+            }
+
+            alert('无法找到满足条件的连续座位！请尝试减少人数或手动选择。');
+        }
+
+        // 更新已选座位显示
+        function updateSelectedSeatsDisplay() {
+            const seatDetails = document.getElementById('seatDetails');
+
+            if (selectedSeats.length === 0) {
+                seatDetails.innerHTML = '请选择座位';
+                return;
+            }
+
+            let html = `<strong>已选 ${selectedSeats.length} 个座位：</strong><br>`;
+            selectedSeats.forEach(seat => {
+                html += `第${seat.row}排${seat.col}座 `;
+            });
+
+            seatDetails.innerHTML = html;
+        }
+
+        // 更新总价
+        function updateTotalPrice() {
+            let total = 0;
+            const ticketType = document.getElementById('ticketType').value;
+
+            if (ticketType === 'individual') {
+                const age = parseInt(document.getElementById('customerAge').value);
+                if (age && selectedSeats.length > 0) {
+                    if (age < 15) {
+                        total = selectedSeats.length * TICKET_PRICES.child;
+                    } else if (age >= 60) {
+                        total = selectedSeats.length * TICKET_PRICES.senior;
+                    } else {
+                        total = selectedSeats.length * TICKET_PRICES.adult;
+                    }
+                }
+            } else {
+                // 团体票根据成员年龄计算
+                const groupSize = parseInt(document.getElementById('groupSize').value);
+                if (groupSize && selectedSeats.length > 0) {
+                    for (let i = 0; i < Math.min(groupSize, selectedSeats.length); i++) {
+                        const ageInput = document.getElementById(`memberAge${i}`);
+                        if (ageInput && ageInput.value) {
+                            const age = parseInt(ageInput.value);
+                            if (age < 15) {
+                                total += TICKET_PRICES.child;
+                            } else if (age >= 60) {
+                                total += TICKET_PRICES.senior;
+                            } else {
+                                total += TICKET_PRICES.adult;
+                            }
+                        }
+                    }
+                }
+            }
+
+            document.getElementById('totalPrice').textContent = `总计：¥${total}`;
+        }
+
+        // 切换票种类型
+        function toggleTicketType() {
+            const ticketType = document.getElementById('ticketType').value;
+            const individualForm = document.getElementById('individualForm');
+            const groupForm = document.getElementById('groupForm');
+
+            if (ticketType === 'individual') {
+                individualForm.style.display = 'block';
+                groupForm.style.display = 'none';
+            } else {
+                individualForm.style.display = 'none';
+                groupForm.style.display = 'block';
+            }
+
+            // 清空选择
+            clearSelection();
+        }
+
+        // 更新团体成员输入框
+        function updateGroupMembers() {
+            const groupSize = parseInt(document.getElementById('groupSize').value);
+            const groupMembers = document.getElementById('groupMembers');
+
+            if (!groupSize || groupSize < 2 || groupSize > 20) {
+                groupMembers.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            for (let i = 0; i < groupSize; i++) {
+                html += `
+                    <div class="member-input">
+                        <input type="text" id="memberName${i}" placeholder="成员${i + 1}姓名">
+                        <input type="number" id="memberAge${i}" placeholder="年龄" min="1" max="120" style="width: 80px;">
+                    </div>
+                `;
+            }
+
+            groupMembers.innerHTML = html;
+        }
+
+        // 清空选择
+        function clearSelection() {
+            selectedSeats = [];
+            updateSelectedSeatsDisplay();
+            drawCinema();
+            updateTotalPrice();
+        }
+
+        // 预订票
+        function reserveTickets() {
+            if (selectedSeats.length === 0) {
+                alert('请先选择座位！');
+                return;
+            }
+
+            if (!validateCustomerInfo()) {
+                return;
+            }
+
+            // 将选中的座位添加到预订列表
+            selectedSeats.forEach(seat => {
+                reservedSeats.add(seat.number);
+            });
+
+            alert(`预订成功！已预订 ${selectedSeats.length} 个座位。`);
+
+            selectedSeats = [];
+            updateSelectedSeatsDisplay();
+            drawCinema();
+            updateTotalPrice();
+        }
+
+        // 直接购票
+        function purchaseTickets() {
+            if (selectedSeats.length === 0) {
+                alert('请先选择座位！');
+                return;
+            }
+
+            if (!validateCustomerInfo()) {
+                return;
+            }
+
+            const totalPrice = document.getElementById('totalPrice').textContent;
+            const confirmed = confirm(`确认购买这些座位吗？\n${totalPrice}`);
+
+            if (confirmed) {
+                // 将选中的座位添加到已售列表
+                selectedSeats.forEach(seat => {
+                    soldSeats.add(seat.number);
+                    reservedSeats.delete(seat.number); // 如果之前是预订状态，移除预订
+                });
+
+                alert(`购票成功！${totalPrice}`);
+
+                selectedSeats = [];
+                updateSelectedSeatsDisplay();
+                drawCinema();
+                updateTotalPrice();
+            }
+        }
+
+        // 取消预订
+        function cancelReservation() {
+            if (selectedSeats.length === 0) {
+                alert('请先选择要取消预订的座位！');
+                return;
+            }
+
+            let hasReserved = false;
+            selectedSeats.forEach(seat => {
+                if (reservedSeats.has(seat.number)) {
+                    reservedSeats.delete(seat.number);
+                    hasReserved = true;
+                }
+            });
+
+            if (hasReserved) {
+                alert('预订已取消！');
+                selectedSeats = [];
+                updateSelectedSeatsDisplay();
+                drawCinema();
+            } else {
+                alert('所选座位中没有预订的座位！');
+            }
+        }
+
+        // 退票
+        function refundTickets() {
+            if (selectedSeats.length === 0) {
+                alert('请先选择要退票的座位！');
+                return;
+            }
+
+            let hasSold = false;
+            selectedSeats.forEach(seat => {
+                if (soldSeats.has(seat.number)) {
+                    soldSeats.delete(seat.number);
+                    hasSold = true;
+                }
+            });
+
+            if (hasSold) {
+                alert('退票成功！');
+                selectedSeats = [];
+                updateSelectedSeatsDisplay();
+                drawCinema();
+            } else {
+                alert('所选座位中没有已售的座位！');
+            }
+        }
+
+        // 验证客户信息
+        function validateCustomerInfo() {
+            const ticketType = document.getElementById('ticketType').value;
+
+            if (ticketType === 'individual') {
+                const name = document.getElementById('customerName').value.trim();
+                const age = document.getElementById('customerAge').value;
+
+                if (!name) {
+                    alert('请输入姓名！');
+                    return false;
+                }
+
+                if (!age || age < 1 || age > 120) {
+                    alert('请输入有效的年龄！');
+                    return false;
+                }
+            } else {
+                const groupSize = parseInt(document.getElementById('groupSize').value);
+
+                if (!groupSize || groupSize < 2 || groupSize > 20) {
+                    alert('请输入有效的团体人数！');
+                    return false;
+                }
+
+                for (let i = 0; i < groupSize; i++) {
+                    const nameInput = document.getElementById(`memberName${i}`);
+                    const ageInput = document.getElementById(`memberAge${i}`);
+
+                    if (!nameInput || !nameInput.value.trim()) {
+                        alert(`请输入成员${i + 1}的姓名！`);
+                        return false;
+                    }
+
+                    if (!ageInput || !ageInput.value || ageInput.value < 1 || ageInput.value > 120) {
+                        alert(`请输入成员${i + 1}的有效年龄！`);
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        // 更新影院布局
+        function updateCinemaLayout() {
+            const totalSeats = parseInt(document.getElementById('totalSeats').value);
+            const seatsPerRow = parseInt(document.getElementById('seatsPerRow').value);
+
+            if (seatsPerRow < 10 || seatsPerRow > 25) {
+                alert('每排座位数应在10-25之间！');
+                return;
+            }
+
+            cinemaConfig.totalSeats = totalSeats;
+            cinemaConfig.seatsPerRow = seatsPerRow;
+
+            // 重新初始化
+            initializeSeats();
+            selectedSeats = [];
+            reservedSeats.clear();
+            soldSeats.clear();
+
+            // 添加模拟的已售座位
+            addMockSoldSeats();
+
+            updateSelectedSeatsDisplay();
+            drawCinema();
+            updateTotalPrice();
+
+            alert(`影院布局已更新：${totalSeats}座，每排${seatsPerRow}座`);
+        }
+
+        // 添加模拟的已售座位
+        function addMockSoldSeats() {
+            const mockSoldCount = Math.floor(cinemaConfig.totalSeats * 0.2); // 20%已售
+            const mockReservedCount = Math.floor(cinemaConfig.totalSeats * 0.1); // 10%预订
+
+            // 添加已售座位
+            for (let i = 0; i < mockSoldCount; i++) {
+                let seatNumber;
+                do {
+                    seatNumber = Math.floor(Math.random() * cinemaConfig.totalSeats) + 1;
+                } while (soldSeats.has(seatNumber) || reservedSeats.has(seatNumber));
+
+                soldSeats.add(seatNumber);
+            }
+
+            // 添加预订座位
+            for (let i = 0; i < mockReservedCount; i++) {
+                let seatNumber;
+                do {
+                    seatNumber = Math.floor(Math.random() * cinemaConfig.totalSeats) + 1;
+                } while (soldSeats.has(seatNumber) || reservedSeats.has(seatNumber));
+
+                reservedSeats.add(seatNumber);
+            }
+        }
+    </script>
+</body>
+
+</html>
