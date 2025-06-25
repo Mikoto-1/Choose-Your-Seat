@@ -283,6 +283,43 @@
             border-top: 2px solid #dee2e6;
         }
 
+        .ticket-records {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .ticket-category {
+            margin-bottom: 15px;
+        }
+
+        .ticket-list {
+            background: white;
+            border-radius: 6px;
+            padding: 10px;
+            border-left: 3px solid #dee2e6;
+            font-size: 13px;
+            line-height: 1.4;
+            min-height: 40px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .ticket-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .ticket-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        .ticket-item:last-child {
+            border-bottom: none;
+        }
+
         @media (max-width: 768px) {
             .main-content {
                 flex-direction: column;
@@ -360,6 +397,22 @@
                 <div class="selected-seats" id="selectedSeatsInfo">
                     <h4>📍 已选座位</h4>
                     <div class="seat-info" id="seatDetails">请选择座位</div>
+                </div>
+
+                <!-- 用户票据信息 -->
+                <div class="control-panel">
+                    <h3>🎟️ 我的票据</h3>
+                    <div class="ticket-records">
+                        <div class="ticket-category">
+                            <h5 style="color: #e67e22; margin-bottom: 10px;">📝 我的预订</h5>
+                            <div id="userReservedList" class="ticket-list">暂无预订</div>
+                        </div>
+                        <div class="ticket-category" style="margin-top: 15px;">
+                            <h5 style="color: #e74c3c; margin-bottom: 10px;">🎫 我的购票</h5>
+                            <div id="userPurchasedList" class="ticket-list">暂无购票</div>
+                        </div>
+                        <button class="btn" onclick="refreshUserTickets()" style="margin-top: 10px;">🔄 刷新票据</button>
+                    </div>
                 </div>
 
                 <!-- 购票选项 -->
@@ -459,6 +512,12 @@
         let soldSeats = new Set();
         let ctrlPressed = false;
 
+        // 用户票据管理
+        let userTickets = {
+            reserved: new Map(), // 用户预订的票 seat_number -> {name, age, timestamp}
+            purchased: new Map() // 用户购买的票 seat_number -> {name, age, timestamp}
+        };
+
         // 座位状态常量
         const SEAT_STATUS = {
             AVAILABLE: 'available',
@@ -486,6 +545,9 @@
 
             // 添加一些模拟的已售座位
             addMockSoldSeats();
+
+            // 初始化用户票据显示
+            refreshUserTickets();
         });
 
         // 添加事件监听器
@@ -647,13 +709,27 @@
         function handleSeatSelection(seat) {
             // 检查座位是否可选
             if (soldSeats.has(seat.number) || reservedSeats.has(seat.number)) {
-                alert('该座位已被占用！');
-                return;
-            }
+                // 如果是用户自己的票，允许选择用于取消/退票
+                const isUserReserved = userTickets.reserved.has(seat.number);
+                const isUserPurchased = userTickets.purchased.has(seat.number);
 
-            // 检查年龄限制
-            if (!checkAgeRestriction(seat)) {
-                return;
+                if (!isUserReserved && !isUserPurchased) {
+                    alert('该座位已被他人占用！');
+                    return;
+                } else {
+                    // 用户自己的票，可以选择用于退票/取消预订
+                    const ticketInfo = isUserReserved ? userTickets.reserved.get(seat.number) : userTickets.purchased.get(seat.number);
+                    const ticketType = isUserReserved ? '预订' : '已购买';
+
+                    if (!confirm(`这是您${ticketType}的座位 (${ticketInfo.name})，选择此座位可进行退票操作。是否继续？`)) {
+                        return;
+                    }
+                }
+            } else {
+                // 检查年龄限制（仅对新选座位）
+                if (!checkAgeRestriction(seat)) {
+                    return;
+                }
             }
 
             const isSelected = selectedSeats.some(s => s.number === seat.number);
@@ -960,17 +1036,32 @@
                 return;
             }
 
-            // 将选中的座位添加到预订列表
+            const ticketType = document.getElementById('ticketType').value;
+            const timestamp = new Date().toLocaleString();
+
+            // 将选中的座位添加到预订列表和用户票据
             selectedSeats.forEach(seat => {
                 reservedSeats.add(seat.number);
+
+                if (ticketType === 'individual') {
+                    const name = document.getElementById('customerName').value.trim();
+                    const age = parseInt(document.getElementById('customerAge').value);
+                    userTickets.reserved.set(seat.number, { name, age, timestamp, seat });
+                } else {
+                    // 团体票，使用第一个成员的信息作为代表
+                    const name = document.getElementById('memberName0').value.trim();
+                    const age = parseInt(document.getElementById('memberAge0').value);
+                    userTickets.reserved.set(seat.number, { name: name + '(团体)', age, timestamp, seat });
+                }
             });
 
-            alert(`预订成功！已预订 ${selectedSeats.length} 个座位。`);
+            alert(`预订成功！已预订 ${selectedSeats.length} 个座位。\n预订时间：${timestamp}`);
 
             selectedSeats = [];
             updateSelectedSeatsDisplay();
             drawCinema();
             updateTotalPrice();
+            refreshUserTickets();
         }
 
         // 直接购票
@@ -988,18 +1079,34 @@
             const confirmed = confirm(`确认购买这些座位吗？\n${totalPrice}`);
 
             if (confirmed) {
-                // 将选中的座位添加到已售列表
+                const ticketType = document.getElementById('ticketType').value;
+                const timestamp = new Date().toLocaleString();
+
+                // 将选中的座位添加到已售列表和用户票据
                 selectedSeats.forEach(seat => {
                     soldSeats.add(seat.number);
                     reservedSeats.delete(seat.number); // 如果之前是预订状态，移除预订
+                    userTickets.reserved.delete(seat.number); // 从用户预订中移除
+
+                    if (ticketType === 'individual') {
+                        const name = document.getElementById('customerName').value.trim();
+                        const age = parseInt(document.getElementById('customerAge').value);
+                        userTickets.purchased.set(seat.number, { name, age, timestamp, seat });
+                    } else {
+                        // 团体票，使用第一个成员的信息作为代表
+                        const name = document.getElementById('memberName0').value.trim();
+                        const age = parseInt(document.getElementById('memberAge0').value);
+                        userTickets.purchased.set(seat.number, { name: name + '(团体)', age, timestamp, seat });
+                    }
                 });
 
-                alert(`购票成功！${totalPrice}`);
+                alert(`购票成功！${totalPrice}\n购票时间：${timestamp}`);
 
                 selectedSeats = [];
                 updateSelectedSeatsDisplay();
                 drawCinema();
                 updateTotalPrice();
+                refreshUserTickets();
             }
         }
 
@@ -1011,20 +1118,26 @@
             }
 
             let hasReserved = false;
+            let canceledSeats = [];
+
             selectedSeats.forEach(seat => {
-                if (reservedSeats.has(seat.number)) {
+                if (userTickets.reserved.has(seat.number)) {
+                    const ticket = userTickets.reserved.get(seat.number);
                     reservedSeats.delete(seat.number);
+                    userTickets.reserved.delete(seat.number);
+                    canceledSeats.push(`第${seat.row}排${seat.col}座 (${ticket.name})`);
                     hasReserved = true;
                 }
             });
 
             if (hasReserved) {
-                alert('预订已取消！');
+                alert(`预订已取消！\n取消的座位：\n${canceledSeats.join('\n')}`);
                 selectedSeats = [];
                 updateSelectedSeatsDisplay();
                 drawCinema();
+                refreshUserTickets();
             } else {
-                alert('所选座位中没有预订的座位！');
+                alert('所选座位中没有您预订的座位！');
             }
         }
 
@@ -1036,20 +1149,37 @@
             }
 
             let hasSold = false;
+            let refundedSeats = [];
+            let totalRefund = 0;
+
             selectedSeats.forEach(seat => {
-                if (soldSeats.has(seat.number)) {
+                if (userTickets.purchased.has(seat.number)) {
+                    const ticket = userTickets.purchased.get(seat.number);
                     soldSeats.delete(seat.number);
+                    userTickets.purchased.delete(seat.number);
+                    refundedSeats.push(`第${seat.row}排${seat.col}座 (${ticket.name})`);
+
+                    // 计算退款金额
+                    if (ticket.age < 15) {
+                        totalRefund += TICKET_PRICES.child;
+                    } else if (ticket.age >= 60) {
+                        totalRefund += TICKET_PRICES.senior;
+                    } else {
+                        totalRefund += TICKET_PRICES.adult;
+                    }
+
                     hasSold = true;
                 }
             });
 
             if (hasSold) {
-                alert('退票成功！');
+                alert(`退票成功！退款金额：¥${totalRefund}\n退票座位：\n${refundedSeats.join('\n')}`);
                 selectedSeats = [];
                 updateSelectedSeatsDisplay();
                 drawCinema();
+                refreshUserTickets();
             } else {
-                alert('所选座位中没有已售的座位！');
+                alert('所选座位中没有您购买的座位！');
             }
         }
 
@@ -1115,6 +1245,8 @@
             selectedSeats = [];
             reservedSeats.clear();
             soldSeats.clear();
+            userTickets.reserved.clear();
+            userTickets.purchased.clear();
 
             // 添加模拟的已售座位
             addMockSoldSeats();
@@ -1128,10 +1260,21 @@
 
         // 添加模拟的已售座位
         function addMockSoldSeats() {
-            const mockSoldCount = Math.floor(cinemaConfig.totalSeats * 0.2); // 20%已售
-            const mockReservedCount = Math.floor(cinemaConfig.totalSeats * 0.1); // 10%预订
+            const mockSoldCount = Math.floor(cinemaConfig.totalSeats * 0.15); // 15%已售
+            const mockReservedCount = Math.floor(cinemaConfig.totalSeats * 0.08); // 8%预订
+            const mockUserReservedCount = Math.floor(cinemaConfig.totalSeats * 0.05); // 5%用户自己的预订
+            const mockUserPurchasedCount = Math.floor(cinemaConfig.totalSeats * 0.03); // 3%用户自己的购票
 
-            // 添加已售座位
+            const mockNames = ['张三', '李四', '王五', '赵六', '钱七', '孙八', '周九', '吴十'];
+            const getRandomAge = () => Math.floor(Math.random() * 60) + 10; // 10-70岁
+            const getRandomTimestamp = () => {
+                const now = new Date();
+                const pastDays = Math.floor(Math.random() * 7); // 过去7天内
+                const pastTime = new Date(now.getTime() - pastDays * 24 * 60 * 60 * 1000);
+                return pastTime.toLocaleString();
+            };
+
+            // 添加他人已售座位
             for (let i = 0; i < mockSoldCount; i++) {
                 let seatNumber;
                 do {
@@ -1141,7 +1284,7 @@
                 soldSeats.add(seatNumber);
             }
 
-            // 添加预订座位
+            // 添加他人预订座位
             for (let i = 0; i < mockReservedCount; i++) {
                 let seatNumber;
                 do {
@@ -1149,6 +1292,111 @@
                 } while (soldSeats.has(seatNumber) || reservedSeats.has(seatNumber));
 
                 reservedSeats.add(seatNumber);
+            }
+
+            // 添加用户自己的预订座位
+            for (let i = 0; i < mockUserReservedCount; i++) {
+                let seatNumber;
+                do {
+                    seatNumber = Math.floor(Math.random() * cinemaConfig.totalSeats) + 1;
+                } while (soldSeats.has(seatNumber) || reservedSeats.has(seatNumber) ||
+                userTickets.reserved.has(seatNumber) || userTickets.purchased.has(seatNumber));
+
+                const row = Math.ceil(seatNumber / cinemaConfig.seatsPerRow);
+                const col = ((seatNumber - 1) % cinemaConfig.seatsPerRow) + 1;
+                const seat = { row, col, number: seatNumber };
+
+                reservedSeats.add(seatNumber);
+                userTickets.reserved.set(seatNumber, {
+                    name: '我的预订',
+                    age: getRandomAge(),
+                    timestamp: getRandomTimestamp(),
+                    seat: seat
+                });
+            }
+
+            // 添加用户自己的已购座位
+            for (let i = 0; i < mockUserPurchasedCount; i++) {
+                let seatNumber;
+                do {
+                    seatNumber = Math.floor(Math.random() * cinemaConfig.totalSeats) + 1;
+                } while (soldSeats.has(seatNumber) || reservedSeats.has(seatNumber) ||
+                userTickets.reserved.has(seatNumber) || userTickets.purchased.has(seatNumber));
+
+                const row = Math.ceil(seatNumber / cinemaConfig.seatsPerRow);
+                const col = ((seatNumber - 1) % cinemaConfig.seatsPerRow) + 1;
+                const seat = { row, col, number: seatNumber };
+
+                soldSeats.add(seatNumber);
+                userTickets.purchased.set(seatNumber, {
+                    name: '我的购票',
+                    age: getRandomAge(),
+                    timestamp: getRandomTimestamp(),
+                    seat: seat
+                });
+            }
+
+            // 刷新用户票据显示
+            refreshUserTickets();
+        }
+
+        // 刷新用户票据显示
+        function refreshUserTickets() {
+            const reservedList = document.getElementById('userReservedList');
+            const purchasedList = document.getElementById('userPurchasedList');
+
+            // 显示预订票据
+            if (userTickets.reserved.size === 0) {
+                reservedList.innerHTML = '<span style="color: #888;">暂无预订</span>';
+            } else {
+                let html = '';
+                userTickets.reserved.forEach((ticket, seatNumber) => {
+                    html += `
+                        <div class="ticket-item" onclick="selectUserSeat(${seatNumber})">
+                            <strong>第${ticket.seat.row}排${ticket.seat.col}座</strong><br>
+                            ${ticket.name} (${ticket.age}岁)<br>
+                            <small>${ticket.timestamp}</small>
+                        </div>
+                    `;
+                });
+                reservedList.innerHTML = html;
+            }
+
+            // 显示购票记录
+            if (userTickets.purchased.size === 0) {
+                purchasedList.innerHTML = '<span style="color: #888;">暂无购票</span>';
+            } else {
+                let html = '';
+                userTickets.purchased.forEach((ticket, seatNumber) => {
+                    html += `
+                        <div class="ticket-item" onclick="selectUserSeat(${seatNumber})">
+                            <strong>第${ticket.seat.row}排${ticket.seat.col}座</strong><br>
+                            ${ticket.name} (${ticket.age}岁)<br>
+                            <small>${ticket.timestamp}</small>
+                        </div>
+                    `;
+                });
+                purchasedList.innerHTML = html;
+            }
+        }
+
+        // 选择用户的座位
+        function selectUserSeat(seatNumber) {
+            // 找到对应的座位对象
+            for (let row = 0; row < seats.length; row++) {
+                if (!seats[row]) continue;
+                for (let col = 0; col < seats[row].length; col++) {
+                    if (!seats[row][col]) continue;
+                    const seat = seats[row][col];
+                    if (seat.number === seatNumber) {
+                        // 清空当前选择，选中这个座位
+                        selectedSeats = [seat];
+                        updateSelectedSeatsDisplay();
+                        drawCinema();
+                        updateTotalPrice();
+                        return;
+                    }
+                }
             }
         }
     </script>
