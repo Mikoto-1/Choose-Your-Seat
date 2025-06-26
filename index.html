@@ -51,6 +51,8 @@
         .cinema-section {
             flex: 2;
             min-width: 800px;
+            overflow: auto;
+            /* 添加滚动条支持 */
         }
 
         .control-section {
@@ -76,6 +78,12 @@
             background: #f8f9fa;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             cursor: pointer;
+            max-width: 100%;
+            /* 确保Canvas不会超出容器 */
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            /* 居中显示 */
         }
 
         .legend {
@@ -593,6 +601,38 @@
                     }
                 }
             }
+
+            // 初始化座位后，动态调整Canvas尺寸
+            updateCanvasSize();
+        }
+
+        // 动态更新Canvas尺寸
+        function updateCanvasSize() {
+            const margin = 50;
+            const seatSize = 25;
+            const seatGap = 3;
+            const rowHeight = 45;
+
+            // 计算所需的Canvas尺寸
+            const maxRowWidth = (cinemaConfig.seatsPerRow * (seatSize + seatGap)) - seatGap;
+            const arcMaxOffset = Math.pow((cinemaConfig.rows - 1) * 0.15, 2) * 20; // 最大弧形偏移
+
+            // Canvas宽度：座位宽度 + 弧形偏移 + 左右边距 + 排号空间
+            const requiredWidth = Math.max(800, maxRowWidth + arcMaxOffset * 2 + margin * 2 + 100);
+
+            // Canvas高度：座位高度 + 上下边距 + 银幕空间
+            const requiredHeight = Math.max(600, cinemaConfig.rows * rowHeight + margin * 2 + 80);
+
+            // 更新Canvas尺寸
+            canvas.width = requiredWidth;
+            canvas.height = requiredHeight;
+
+            // 更新Canvas样式，保持最大宽度限制
+            const maxDisplayWidth = Math.min(requiredWidth, 1000); // 最大显示宽度
+            const displayHeight = (requiredHeight * maxDisplayWidth) / requiredWidth;
+
+            canvas.style.width = maxDisplayWidth + 'px';
+            canvas.style.height = displayHeight + 'px';
         }
 
         // 绘制影院布局
@@ -687,8 +727,11 @@
         // 处理座位点击
         function handleSeatClick(event) {
             const rect = canvas.getBoundingClientRect();
-            const clickX = event.clientX - rect.left;
-            const clickY = event.clientY - rect.top;
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            const clickX = (event.clientX - rect.left) * scaleX;
+            const clickY = (event.clientY - rect.top) * scaleY;
 
             // 查找被点击的座位
             for (let row = 0; row < seats.length; row++) {
