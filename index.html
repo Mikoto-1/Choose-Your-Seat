@@ -390,24 +390,6 @@
             color: white;
         }
 
-        .history-btn {
-            background: rgba(255, 255, 255, 0.1);
-            color: rgba(255, 255, 255, 0.9);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 15px;
-            padding: 6px 12px;
-            margin: 0 8px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.3s;
-        }
-
-        .history-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.5);
-            color: white;
-        }
-
         /* 模态框样式 */
         .modal {
             display: none;
@@ -549,14 +531,32 @@
             color: #e74c3c;
             font-size: 12px;
             margin-top: 5px;
+            min-height: 16px;
+            padding: 4px 8px;
+            background: rgba(231, 76, 60, 0.1);
+            border-radius: 4px;
+            border-left: 3px solid #e74c3c;
             display: none;
+        }
+
+        .error-msg.show {
+            display: block;
         }
 
         .success-msg {
             color: #27ae60;
             font-size: 12px;
             margin-top: 5px;
+            min-height: 16px;
+            padding: 4px 8px;
+            background: rgba(39, 174, 96, 0.1);
+            border-radius: 4px;
+            border-left: 3px solid #27ae60;
             display: none;
+        }
+
+        .success-msg.show {
+            display: block;
         }
 
         @media (max-width: 768px) {
@@ -594,7 +594,6 @@
                 <div id="userSection" class="user-info" style="display: none;">
                     <div class="user-avatar" id="userAvatar">U</div>
                     <span id="userName">用户名</span>
-                    <button class="history-btn" onclick="showTicketHistory()">📋 购票历史</button>
                     <button class="logout-btn" onclick="logout()">退出</button>
                 </div>
             </div>
@@ -842,344 +841,39 @@
             refreshUserTickets();
         });
 
-        // 初始化用户系统
-        function initializeUserSystem() {
-            // 从localStorage加载用户数据
-            loadUserData();
+        // 添加事件监听器
+        function addEventListeners() {
+            canvas.addEventListener('click', handleSeatClick);
 
-            // 检查是否有当前登录用户
-            const savedUser = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-                updateUserUI();
-                loadUserTickets();
-            }
-        }
-
-        // 从localStorage加载用户数据
-        function loadUserData() {
-            const users = localStorage.getItem(STORAGE_KEYS.USERS);
-            if (users) {
-                userDatabase = JSON.parse(users);
-            }
-        }
-
-        // 保存用户数据到localStorage
-        function saveUserData() {
-            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(userDatabase));
-        }
-
-        // 加载用户票据数据
-        function loadUserTickets() {
-            if (!currentUser) return;
-
-            const userTicketsKey = STORAGE_KEYS.USER_TICKETS + '_' + currentUser.username;
-            const savedTickets = localStorage.getItem(userTicketsKey);
-
-            if (savedTickets) {
-                const tickets = JSON.parse(savedTickets);
-                userTickets.reserved = new Map(tickets.reserved || []);
-                userTickets.purchased = new Map(tickets.purchased || []);
-            } else {
-                // 如果没有保存的票据，初始化为空
-                userTickets.reserved = new Map();
-                userTickets.purchased = new Map();
-            }
-
-            // 重新绘制座位显示用户票据
-            drawCinema();
-            refreshUserTickets();
-        }
-
-        // 保存用户票据数据
-        function saveUserTickets() {
-            if (!currentUser) return;
-
-            const userTicketsKey = STORAGE_KEYS.USER_TICKETS + '_' + currentUser.username;
-            const tickets = {
-                reserved: Array.from(userTickets.reserved),
-                purchased: Array.from(userTickets.purchased)
-            };
-
-            localStorage.setItem(userTicketsKey, JSON.stringify(tickets));
-        }
-
-        // 打开登录模态框
-        function openLoginModal() {
-            document.getElementById('loginModal').style.display = 'block';
-            // 清空表单
-            clearLoginForms();
-            // 默认显示登录标签
-            switchTab('login');
-        }
-
-        // 关闭登录模态框
-        function closeLoginModal() {
-            document.getElementById('loginModal').style.display = 'none';
-            clearLoginForms();
-        }
-
-        // 切换登录/注册标签
-        function switchTab(tabName) {
-            // 隐藏所有标签内容
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
+            // 监听Ctrl键
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Control') {
+                    ctrlPressed = true;
+                }
             });
 
-            // 移除所有标签按钮的active类
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
+            document.addEventListener('keyup', function (e) {
+                if (e.key === 'Control') {
+                    ctrlPressed = false;
+                }
             });
 
-            // 显示选中的标签
-            document.getElementById(tabName + 'Tab').classList.add('active');
-
-            // 激活对应的按钮
-            event.target.classList.add('active');
-
-            // 清空错误消息
-            clearErrorMessages();
-        }
-
-        // 清空登录表单
-        function clearLoginForms() {
-            // 清空登录表单
-            document.getElementById('loginForm').reset();
-            document.getElementById('registerForm').reset();
-
-            // 清空错误消息
-            clearErrorMessages();
-        }
-
-        // 清空错误消息
-        function clearErrorMessages() {
-            document.querySelectorAll('.error-msg, .success-msg').forEach(msg => {
-                msg.textContent = '';
-            });
-        }
-
-        // 处理登录
-        function handleLogin(event) {
-            event.preventDefault();
-
-            const username = document.getElementById('loginUsername').value.trim();
-            const password = document.getElementById('loginPassword').value;
-
-            // 清空之前的错误消息
-            clearErrorMessages();
-
-            // 验证输入
-            if (!username || !password) {
-                showError('loginError', '请填写完整的用户名和密码');
-                return;
+            // 监听年龄输入变化，实时更新座位显示
+            const customerAgeInput = document.getElementById('customerAge');
+            if (customerAgeInput) {
+                customerAgeInput.addEventListener('input', function () {
+                    drawCinema(); // 重新绘制座位，应用年龄限制
+                });
             }
 
-            // 检查用户是否存在
-            if (!userDatabase[username]) {
-                showError('loginError', '用户不存在，请先注册');
-                return;
-            }
-
-            // 验证密码
-            if (userDatabase[username].password !== password) {
-                showError('loginError', '密码错误，请重新输入');
-                return;
-            }
-
-            // 登录成功
-            currentUser = {
-                username: username,
-                email: userDatabase[username].email,
-                loginTime: new Date().getTime()
-            };
-
-            // 保存当前用户到localStorage
-            localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(currentUser));
-
-            // 更新UI
-            updateUserUI();
-
-            // 加载用户票据
-            loadUserTickets();
-
-            // 显示成功消息
-            showSuccess('loginSuccess', '登录成功！');
-
-            // 2秒后关闭模态框
-            setTimeout(() => {
-                closeLoginModal();
-            }, 1500);
-        }
-
-        // 处理注册
-        function handleRegister(event) {
-            event.preventDefault();
-
-            const username = document.getElementById('registerUsername').value.trim();
-            const password = document.getElementById('registerPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            const email = document.getElementById('registerEmail').value.trim();
-
-            // 清空之前的错误消息
-            clearErrorMessages();
-
-            // 验证输入
-            if (!username || !password) {
-                showError('registerError', '用户名和密码不能为空');
-                return;
-            }
-
-            if (username.length < 3 || username.length > 20) {
-                showError('registerUsernameError', '用户名长度应在3-20个字符之间');
-                return;
-            }
-
-            if (password.length < 6) {
-                showError('registerPasswordError', '密码长度不能少于6个字符');
-                return;
-            }
-
-            if (password !== confirmPassword) {
-                showError('confirmPasswordError', '两次输入的密码不一致');
-                return;
-            }
-
-            // 检查用户名是否已存在
-            if (userDatabase[username]) {
-                showError('registerUsernameError', '用户名已存在，请选择其他用户名');
-                return;
-            }
-
-            // 验证邮箱格式（如果填写了）
-            if (email && !isValidEmail(email)) {
-                showError('registerEmailError', '邮箱格式不正确');
-                return;
-            }
-
-            // 创建新用户
-            userDatabase[username] = {
-                username: username,
-                password: password,
-                email: email,
-                registerTime: new Date().getTime()
-            };
-
-            // 保存用户数据
-            saveUserData();
-
-            // 显示成功消息
-            showSuccess('registerSuccess', '注册成功！请登录');
-
-            // 2秒后切换到登录标签
-            setTimeout(() => {
-                switchTabByName('login');
-                // 自动填入用户名
-                document.getElementById('loginUsername').value = username;
-            }, 1500);
-        }
-
-        // 用户登出
-        function logout() {
-            if (!currentUser) return;
-
-            if (confirm('确定要退出登录吗？')) {
-                // 清空当前用户
-                currentUser = null;
-
-                // 清空localStorage中的当前用户
-                localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
-
-                // 清空用户票据
-                userTickets.reserved = new Map();
-                userTickets.purchased = new Map();
-
-                // 更新UI
-                updateUserUI();
-
-                // 重新绘制座位（清除用户票据显示）
-                drawCinema();
-                refreshUserTickets();
-
-                alert('已成功退出登录');
+            // 监听票务类型变化，重新绘制座位
+            const ticketTypeSelect = document.getElementById('ticketType');
+            if (ticketTypeSelect) {
+                ticketTypeSelect.addEventListener('change', function () {
+                    drawCinema(); // 重新绘制座位
+                });
             }
         }
-
-        // 更新用户UI显示
-        function updateUserUI() {
-            const loginSection = document.getElementById('loginSection');
-            const userSection = document.getElementById('userSection');
-            const userName = document.getElementById('userName');
-            const userAvatar = document.getElementById('userAvatar');
-
-            if (currentUser) {
-                // 显示用户信息，隐藏登录按钮
-                loginSection.style.display = 'none';
-                userSection.style.display = 'flex';
-                userName.textContent = currentUser.username;
-
-                // 设置用户头像为用户名首字母
-                const firstChar = currentUser.username.charAt(0).toUpperCase();
-                userAvatar.textContent = firstChar;
-            } else {
-                // 显示登录按钮，隐藏用户信息
-                loginSection.style.display = 'block';
-                userSection.style.display = 'none';
-            }
-        }
-
-        // 显示错误消息
-        function showError(elementId, message) {
-            const errorElement = document.getElementById(elementId);
-            if (errorElement) {
-                errorElement.textContent = message;
-                errorElement.style.color = '#e74c3c';
-            }
-        }
-
-        // 显示成功消息
-        function showSuccess(elementId, message) {
-            const successElement = document.getElementById(elementId);
-            if (successElement) {
-                successElement.textContent = message;
-                successElement.style.color = '#27ae60';
-            }
-        }
-
-        // 验证邮箱格式
-        function isValidEmail(email) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return emailRegex.test(email);
-        }
-
-        // 通过名称切换标签（用于编程调用）
-        function switchTabByName(tabName) {
-            // 隐藏所有标签内容
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-
-            // 移除所有标签按钮的active类
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-
-            // 显示选中的标签
-            document.getElementById(tabName + 'Tab').classList.add('active');
-
-            // 激活对应的按钮
-            document.querySelector(`.tab-btn[onclick="switchTab('${tabName}')"]`).classList.add('active');
-
-            // 清空错误消息
-            clearErrorMessages();
-        }
-
-        // 关闭模态框（点击外部区域）
-        window.onclick = function (event) {
-            const modal = document.getElementById('loginModal');
-            if (event.target === modal) {
-                closeLoginModal();
-            }
-        };
 
         // 初始化座位数据
         function initializeSeats() {
@@ -1888,7 +1582,7 @@
         function reserveTickets() {
             // 检查用户是否已登录
             if (!currentUser) {
-                alert('请先登录后再进行预订操作！');
+                alert('请先登录后再预订座位！');
                 openLoginModal();
                 return;
             }
@@ -1909,34 +1603,35 @@
             selectedSeats.forEach(seat => {
                 reservedSeats.add(seat.number);
 
+                let ticketInfo;
                 if (ticketType === 'individual') {
                     const name = document.getElementById('customerName').value.trim();
                     const age = parseInt(document.getElementById('customerAge').value);
-                    userTickets.reserved.set(seat.number, {
-                        name,
-                        age,
-                        timestamp,
-                        seat,
-                        username: currentUser.username // 绑定到当前用户
-                    });
+                    ticketInfo = { name, age, timestamp, seat, userId: currentUser.username };
                 } else {
                     // 团体票，使用第一个成员的信息作为代表
                     const name = document.getElementById('memberName0').value.trim();
                     const age = parseInt(document.getElementById('memberAge0').value);
-                    userTickets.reserved.set(seat.number, {
-                        name: name + '(团体)',
-                        age,
-                        timestamp,
-                        seat,
-                        username: currentUser.username // 绑定到当前用户
-                    });
+                    ticketInfo = { name: name + '(团体)', age, timestamp, seat, userId: currentUser.username };
                 }
+
+                userTickets.reserved.set(seat.number, ticketInfo);
+
+                // 保存到用户数据
+                if (!currentUser.tickets) currentUser.tickets = [];
+                currentUser.tickets.push({
+                    ...ticketInfo,
+                    status: 'reserved',
+                    seatNumber: seat.number
+                });
             });
 
-            // 保存用户票据到localStorage
-            saveUserTickets();
+            // 更新localStorage中的用户数据
+            const users = JSON.parse(localStorage.getItem('cinemaUsers') || '{}');
+            users[currentUser.username] = currentUser;
+            localStorage.setItem('cinemaUsers', JSON.stringify(users));
 
-            alert(`预订成功！已预订 ${selectedSeats.length} 个座位。\n预订时间：${timestamp}\n用户：${currentUser.username}`);
+            alert(`预订成功！已预订 ${selectedSeats.length} 个座位。\n预订时间：${timestamp}`);
 
             selectedSeats = [];
             updateSelectedSeatsDisplay();
@@ -1949,7 +1644,7 @@
         function purchaseTickets() {
             // 检查用户是否已登录
             if (!currentUser) {
-                alert('请先登录后再进行购票操作！');
+                alert('请先登录后再购买座位！');
                 openLoginModal();
                 return;
             }
@@ -1964,7 +1659,7 @@
             }
 
             const totalPrice = document.getElementById('totalPrice').textContent;
-            const confirmed = confirm(`确认购买这些座位吗？\n${totalPrice}\n用户：${currentUser.username}`);
+            const confirmed = confirm(`确认购买这些座位吗？\n${totalPrice}`);
 
             if (confirmed) {
                 const ticketType = document.getElementById('ticketType').value;
@@ -1976,34 +1671,35 @@
                     reservedSeats.delete(seat.number); // 如果之前是预订状态，移除预订
                     userTickets.reserved.delete(seat.number); // 从用户预订中移除
 
+                    let ticketInfo;
                     if (ticketType === 'individual') {
                         const name = document.getElementById('customerName').value.trim();
                         const age = parseInt(document.getElementById('customerAge').value);
-                        userTickets.purchased.set(seat.number, {
-                            name,
-                            age,
-                            timestamp,
-                            seat,
-                            username: currentUser.username // 绑定到当前用户
-                        });
+                        ticketInfo = { name, age, timestamp, seat, userId: currentUser.username };
                     } else {
                         // 团体票，使用第一个成员的信息作为代表
                         const name = document.getElementById('memberName0').value.trim();
                         const age = parseInt(document.getElementById('memberAge0').value);
-                        userTickets.purchased.set(seat.number, {
-                            name: name + '(团体)',
-                            age,
-                            timestamp,
-                            seat,
-                            username: currentUser.username // 绑定到当前用户
-                        });
+                        ticketInfo = { name: name + '(团体)', age, timestamp, seat, userId: currentUser.username };
                     }
+
+                    userTickets.purchased.set(seat.number, ticketInfo);
+
+                    // 保存到用户数据
+                    if (!currentUser.tickets) currentUser.tickets = [];
+                    currentUser.tickets.push({
+                        ...ticketInfo,
+                        status: 'purchased',
+                        seatNumber: seat.number
+                    });
                 });
 
-                // 保存用户票据到localStorage
-                saveUserTickets();
+                // 更新localStorage中的用户数据
+                const users = JSON.parse(localStorage.getItem('cinemaUsers') || '{}');
+                users[currentUser.username] = currentUser;
+                localStorage.setItem('cinemaUsers', JSON.stringify(users));
 
-                alert(`购票成功！${totalPrice}\n购票时间：${timestamp}\n用户：${currentUser.username}`);
+                alert(`购票成功！${totalPrice}\n购票时间：${timestamp}`);
 
                 selectedSeats = [];
                 updateSelectedSeatsDisplay();
@@ -2017,7 +1713,7 @@
         function cancelReservation() {
             // 检查用户是否已登录
             if (!currentUser) {
-                alert('请先登录后再进行取消预订操作！');
+                alert('请先登录后再取消预订！');
                 openLoginModal();
                 return;
             }
@@ -2033,21 +1729,34 @@
             selectedSeats.forEach(seat => {
                 if (userTickets.reserved.has(seat.number)) {
                     const ticket = userTickets.reserved.get(seat.number);
+
                     // 检查是否是当前用户的预订
-                    if (ticket.username === currentUser.username) {
-                        reservedSeats.delete(seat.number);
-                        userTickets.reserved.delete(seat.number);
-                        canceledSeats.push(`第${seat.row}排${seat.col}座 (${ticket.name})`);
-                        hasReserved = true;
+                    if (ticket.userId !== currentUser.username) {
+                        return; // 跳过不是当前用户的预订
                     }
+
+                    reservedSeats.delete(seat.number);
+                    userTickets.reserved.delete(seat.number);
+                    canceledSeats.push(`第${seat.row}排${seat.col}座 (${ticket.name})`);
+
+                    // 从用户票据记录中移除
+                    if (currentUser.tickets) {
+                        currentUser.tickets = currentUser.tickets.filter(t =>
+                            !(t.seatNumber === seat.number && t.status === 'reserved')
+                        );
+                    }
+
+                    hasReserved = true;
                 }
             });
 
             if (hasReserved) {
-                // 保存用户票据到localStorage
-                saveUserTickets();
+                // 更新localStorage中的用户数据
+                const users = JSON.parse(localStorage.getItem('cinemaUsers') || '{}');
+                users[currentUser.username] = currentUser;
+                localStorage.setItem('cinemaUsers', JSON.stringify(users));
 
-                alert(`预订已取消！\n取消的座位：\n${canceledSeats.join('\n')}\n用户：${currentUser.username}`);
+                alert(`预订已取消！\n取消的座位：\n${canceledSeats.join('\n')}`);
                 selectedSeats = [];
                 updateSelectedSeatsDisplay();
                 drawCinema();
@@ -2061,7 +1770,7 @@
         function refundTickets() {
             // 检查用户是否已登录
             if (!currentUser) {
-                alert('请先登录后再进行退票操作！');
+                alert('请先登录后再退票！');
                 openLoginModal();
                 return;
             }
@@ -2078,31 +1787,43 @@
             selectedSeats.forEach(seat => {
                 if (userTickets.purchased.has(seat.number)) {
                     const ticket = userTickets.purchased.get(seat.number);
-                    // 检查是否是当前用户的购票
-                    if (ticket.username === currentUser.username) {
-                        soldSeats.delete(seat.number);
-                        userTickets.purchased.delete(seat.number);
-                        refundedSeats.push(`第${seat.row}排${seat.col}座 (${ticket.name})`);
 
-                        // 计算退款金额
-                        if (ticket.age < 15) {
-                            totalRefund += TICKET_PRICES.child;
-                        } else if (ticket.age >= 60) {
-                            totalRefund += TICKET_PRICES.senior;
-                        } else {
-                            totalRefund += TICKET_PRICES.adult;
-                        }
-
-                        hasSold = true;
+                    // 检查是否是当前用户的票
+                    if (ticket.userId !== currentUser.username) {
+                        return; // 跳过不是当前用户的票
                     }
+
+                    soldSeats.delete(seat.number);
+                    userTickets.purchased.delete(seat.number);
+                    refundedSeats.push(`第${seat.row}排${seat.col}座 (${ticket.name})`);
+
+                    // 计算退款金额
+                    if (ticket.age < 15) {
+                        totalRefund += TICKET_PRICES.child;
+                    } else if (ticket.age >= 60) {
+                        totalRefund += TICKET_PRICES.senior;
+                    } else {
+                        totalRefund += TICKET_PRICES.adult;
+                    }
+
+                    // 从用户票据记录中移除
+                    if (currentUser.tickets) {
+                        currentUser.tickets = currentUser.tickets.filter(t =>
+                            !(t.seatNumber === seat.number && t.status === 'purchased')
+                        );
+                    }
+
+                    hasSold = true;
                 }
             });
 
             if (hasSold) {
-                // 保存用户票据到localStorage
-                saveUserTickets();
+                // 更新localStorage中的用户数据
+                const users = JSON.parse(localStorage.getItem('cinemaUsers') || '{}');
+                users[currentUser.username] = currentUser;
+                localStorage.setItem('cinemaUsers', JSON.stringify(users));
 
-                alert(`退票成功！退款金额：¥${totalRefund}\n退票座位：\n${refundedSeats.join('\n')}\n用户：${currentUser.username}`);
+                alert(`退票成功！退款金额：¥${totalRefund}\n退票座位：\n${refundedSeats.join('\n')}`);
                 selectedSeats = [];
                 updateSelectedSeatsDisplay();
                 drawCinema();
@@ -2187,81 +1908,313 @@
             alert(`影院布局已更新：${totalSeats}座，每排${seatsPerRow}座`);
         }
 
-        // 添加模拟的已售座位
+        // 添加模拟的已售座位数据
         function addMockSoldSeats() {
-            const mockSoldCount = Math.floor(cinemaConfig.totalSeats * 0.15); // 15%已售
-            const mockReservedCount = Math.floor(cinemaConfig.totalSeats * 0.08); // 8%预订
-            const mockUserReservedCount = Math.floor(cinemaConfig.totalSeats * 0.05); // 5%用户自己的预订
-            const mockUserPurchasedCount = Math.floor(cinemaConfig.totalSeats * 0.03); // 3%用户自己的购票
+            // 生成约31%的座位占用率
+            const totalSeats = cinemaConfig.totalSeats;
+            const soldCount = Math.floor(totalSeats * 0.31);
 
-            const mockNames = ['张三', '李四', '王五', '赵六', '钱七', '孙八', '周九', '吴十'];
-            const getRandomAge = () => Math.floor(Math.random() * 60) + 10; // 10-70岁
-            const getRandomTimestamp = () => {
-                const now = new Date();
-                const pastDays = Math.floor(Math.random() * 7); // 过去7天内
-                const pastTime = new Date(now.getTime() - pastDays * 24 * 60 * 60 * 1000);
-                return pastTime.toLocaleString();
+            // 清空现有数据
+            soldSeats.clear();
+            reservedSeats.clear();
+            userTickets.purchased.clear();
+            userTickets.reserved.clear();
+
+            // 随机选择座位作为已售
+            const seatNumbers = [];
+            for (let i = 1; i <= totalSeats; i++) {
+                seatNumbers.push(i);
+            }
+
+            // 打乱数组
+            for (let i = seatNumbers.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [seatNumbers[i], seatNumbers[j]] = [seatNumbers[j], seatNumbers[i]];
+            }
+
+            // 选择前soldCount个座位作为已售
+            for (let i = 0; i < soldCount; i++) {
+                soldSeats.add(seatNumbers[i]);
+            }
+
+            // 添加一些预订座位（约5%）
+            const reservedCount = Math.floor(totalSeats * 0.05);
+            for (let i = soldCount; i < soldCount + reservedCount && i < seatNumbers.length; i++) {
+                reservedSeats.add(seatNumbers[i]);
+            }
+        }
+
+        // 用户系统相关函数
+
+        // 打开登录模态框
+        function openLoginModal() {
+            document.getElementById('loginModal').style.display = 'block';
+        }
+
+        // 关闭登录模态框
+        function closeLoginModal() {
+            document.getElementById('loginModal').style.display = 'none';
+            // 清空表单
+            document.getElementById('loginForm').reset();
+            document.getElementById('registerForm').reset();
+            // 清空错误信息
+            clearErrorMessages();
+        }
+
+        // 切换登录/注册标签
+        function switchTab(tabName) {
+            // 移除所有active类
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            // 添加active类到当前标签
+            document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+
+            // 清空错误信息
+            clearErrorMessages();
+        }
+
+        // 清空错误信息
+        function clearErrorMessages() {
+            document.querySelectorAll('.error-msg, .success-msg').forEach(msg => {
+                msg.textContent = '';
+                msg.classList.remove('show');
+            });
+        }
+
+        // 显示错误信息
+        function showErrorMessage(elementId, message) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = message;
+                element.classList.add('show');
+                // 3秒后自动隐藏
+                setTimeout(() => {
+                    element.classList.remove('show');
+                }, 3000);
+            }
+        }
+
+        // 显示成功信息
+        function showSuccessMessage(elementId, message) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = message;
+                element.classList.add('show');
+                // 2秒后自动隐藏
+                setTimeout(() => {
+                    element.classList.remove('show');
+                }, 2000);
+            }
+        }
+
+        // 处理登录
+        function handleLogin(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            // 清空之前的错误信息
+            clearErrorMessages();
+
+            // 基本验证
+            if (!username) {
+                showErrorMessage('loginUsernameError', '请输入用户名');
+                return;
+            }
+
+            if (username.length < 3) {
+                showErrorMessage('loginUsernameError', '用户名至少需要3个字符');
+                return;
+            }
+
+            if (!password) {
+                showErrorMessage('loginPasswordError', '请输入密码');
+                return;
+            }
+
+            if (password.length < 6) {
+                showErrorMessage('loginPasswordError', '密码至少需要6位字符');
+                return;
+            }
+
+            // 从localStorage获取用户数据
+            const users = JSON.parse(localStorage.getItem('cinemaUsers') || '{}');
+
+            if (!users[username]) {
+                showErrorMessage('loginError', '❌ 用户不存在，请检查用户名或先注册账户');
+                return;
+            }
+
+            if (users[username].password !== password) {
+                showErrorMessage('loginError', '❌ 密码错误，请重新输入正确的密码');
+                return;
+            }
+
+            // 登录成功
+            currentUser = users[username];
+            localStorage.setItem('currentUser', username);
+
+            showSuccessMessage('loginSuccess', `🎉 登录成功！欢迎回来，${username}！`);
+            setTimeout(() => {
+                closeLoginModal();
+                updateUserUI();
+                refreshUserTickets();
+            }, 1500);
+        }
+
+        // 处理注册
+        function handleRegister(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('registerUsername').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const email = document.getElementById('registerEmail').value.trim();
+
+            // 清空之前的错误信息
+            clearErrorMessages();
+
+            // 用户名验证
+            if (!username) {
+                showErrorMessage('registerUsernameError', '请输入用户名');
+                return;
+            }
+
+            if (username.length < 3) {
+                showErrorMessage('registerUsernameError', '用户名至少需要3个字符');
+                return;
+            }
+
+            if (username.length > 20) {
+                showErrorMessage('registerUsernameError', '用户名不能超过20个字符');
+                return;
+            }
+
+            // 用户名格式验证（字母、数字、中文）
+            const usernamePattern = /^[a-zA-Z0-9\u4e00-\u9fa5]+$/;
+            if (!usernamePattern.test(username)) {
+                showErrorMessage('registerUsernameError', '用户名只能包含字母、数字和中文字符');
+                return;
+            }
+
+            // 密码验证
+            if (!password) {
+                showErrorMessage('registerPasswordError', '请输入密码');
+                return;
+            }
+
+            if (password.length < 6) {
+                showErrorMessage('registerPasswordError', '密码长度至少需要6位字符');
+                return;
+            }
+
+            if (password.length > 50) {
+                showErrorMessage('registerPasswordError', '密码长度不能超过50位字符');
+                return;
+            }
+
+            // 确认密码验证
+            if (!confirmPassword) {
+                showErrorMessage('confirmPasswordError', '请确认密码');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showErrorMessage('confirmPasswordError', '两次输入的密码不一致，请重新输入');
+                return;
+            }
+
+            // 邮箱验证（如果填写了邮箱）
+            if (email) {
+                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailPattern.test(email)) {
+                    showErrorMessage('registerEmailError', '请输入有效的邮箱格式');
+                    return;
+                }
+            }
+
+            // 检查用户名是否已存在
+            const users = JSON.parse(localStorage.getItem('cinemaUsers') || '{}');
+
+            if (users[username]) {
+                showErrorMessage('registerUsernameError', '❌ 用户名已存在，请选择其他用户名');
+                return;
+            }
+
+            // 创建新用户
+            const newUser = {
+                username: username,
+                password: password,
+                email: email,
+                tickets: [],
+                registeredAt: new Date().toISOString()
             };
 
-            // 添加他人已售座位
-            for (let i = 0; i < mockSoldCount; i++) {
-                let seatNumber;
-                do {
-                    seatNumber = Math.floor(Math.random() * cinemaConfig.totalSeats) + 1;
-                } while (soldSeats.has(seatNumber) || reservedSeats.has(seatNumber));
+            users[username] = newUser;
+            localStorage.setItem('cinemaUsers', JSON.stringify(users));
 
-                soldSeats.add(seatNumber);
+            showSuccessMessage('registerSuccess', `🎉 注册成功！欢迎加入，${username}！即将跳转到登录页面...`);
+            setTimeout(() => {
+                // 切换到登录标签
+                switchTab('login');
+                // 自动填充用户名
+                document.getElementById('loginUsername').value = username;
+                showSuccessMessage('loginSuccess', '💡 已为您自动填充用户名，请输入密码登录');
+            }, 1500);
+        }
+
+        // 退出登录
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            updateUserUI();
+            refreshUserTickets();
+
+            // 清空当前选择的座位
+            selectedSeats = [];
+            updateSelectedSeatsDisplay();
+            drawCinema();
+            updateTotalPrice();
+        }
+
+        // 更新用户界面
+        function updateUserUI() {
+            const loginSection = document.getElementById('loginSection');
+            const userSection = document.getElementById('userSection');
+            const userName = document.getElementById('userName');
+            const userAvatar = document.getElementById('userAvatar');
+
+            if (currentUser) {
+                // 显示已登录状态
+                loginSection.style.display = 'none';
+                userSection.style.display = 'flex';
+                userName.textContent = currentUser.username;
+                userAvatar.textContent = currentUser.username.charAt(0).toUpperCase();
+            } else {
+                // 显示未登录状态
+                loginSection.style.display = 'block';
+                userSection.style.display = 'none';
+            }
+        }
+
+        // 初始化用户系统
+        function initializeUserSystem() {
+            // 检查是否有已登录用户
+            const currentUsername = localStorage.getItem('currentUser');
+            if (currentUsername) {
+                const users = JSON.parse(localStorage.getItem('cinemaUsers') || '{}');
+                if (users[currentUsername]) {
+                    currentUser = users[currentUsername];
+                } else {
+                    // 用户数据不存在，清除登录状态
+                    localStorage.removeItem('currentUser');
+                }
             }
 
-            // 添加他人预订座位
-            for (let i = 0; i < mockReservedCount; i++) {
-                let seatNumber;
-                do {
-                    seatNumber = Math.floor(Math.random() * cinemaConfig.totalSeats) + 1;
-                } while (soldSeats.has(seatNumber) || reservedSeats.has(seatNumber));
-
-                reservedSeats.add(seatNumber);
-            }
-
-            // 添加用户自己的预订座位
-            for (let i = 0; i < mockUserReservedCount; i++) {
-                let seatNumber;
-                do {
-                    seatNumber = Math.floor(Math.random() * cinemaConfig.totalSeats) + 1;
-                } while (soldSeats.has(seatNumber) || reservedSeats.has(seatNumber) ||
-                userTickets.reserved.has(seatNumber) || userTickets.purchased.has(seatNumber));
-
-                const row = Math.ceil(seatNumber / cinemaConfig.seatsPerRow);
-                const col = ((seatNumber - 1) % cinemaConfig.seatsPerRow) + 1;
-                const seat = { row, col, number: seatNumber };
-
-                reservedSeats.add(seatNumber);
-                userTickets.reserved.set(seatNumber, {
-                    name: '我的预订',
-                    age: getRandomAge(),
-                    timestamp: getRandomTimestamp(),
-                    seat: seat
-                });
-            }
-
-            // 添加用户自己的已购座位
-            for (let i = 0; i < mockUserPurchasedCount; i++) {
-                let seatNumber;
-                do {
-                    seatNumber = Math.floor(Math.random() * cinemaConfig.totalSeats) + 1;
-                } while (soldSeats.has(seatNumber) || reservedSeats.has(seatNumber) ||
-                userTickets.reserved.has(seatNumber) || userTickets.purchased.has(seatNumber));
-
-                const row = Math.ceil(seatNumber / cinemaConfig.seatsPerRow);
-                const col = ((seatNumber - 1) % cinemaConfig.seatsPerRow) + 1;
-                const seat = { row, col, number: seatNumber }; soldSeats.add(seatNumber);
-                userTickets.purchased.set(seatNumber, {
-                    name: '我的购票',
-                    age: getRandomAge(),
-                    timestamp: getRandomTimestamp(),
-                    seat: seat
-                });
-            }
+            updateUserUI();
         }
 
         // 刷新用户票据显示
@@ -2269,133 +2222,60 @@
             const reservedList = document.getElementById('userReservedList');
             const purchasedList = document.getElementById('userPurchasedList');
 
+            if (!reservedList || !purchasedList) {
+                return; // 如果元素不存在，直接返回
+            }
+
+            if (!currentUser) {
+
+                // 用户未登录，清空显示
+                reservedList.innerHTML = '<div class="ticket-empty">请登录查看票据信息</div>';
+                purchasedList.innerHTML = '<div class="ticket-empty">请登录查看票据信息</div>';
+                return;
+            }
+
             // 显示预订票据
             if (userTickets.reserved.size === 0) {
-                reservedList.innerHTML = '<span style="color: #888;">暂无预订</span>';
+                reservedList.innerHTML = '<div class="ticket-empty">暂无预订票据</div>';
             } else {
                 let html = '';
                 userTickets.reserved.forEach((ticket, seatNumber) => {
-                    html += `
-                        <div class="ticket-item" onclick="selectUserSeat(${seatNumber})">
-                            <strong>第${ticket.seat.row}排${ticket.seat.col}座</strong><br>
-                            ${ticket.name} (${ticket.age}岁)<br>
-                            <small>${ticket.timestamp}</small>
-                        </div>
-                    `;
+                    // 只显示当前用户的票据
+                    if (ticket.userId === currentUser.username) {
+                        html += `
+                            <div class="ticket-item" onclick="selectUserSeat(${seatNumber})">
+                                <strong>第${ticket.seat.row}排${ticket.seat.col}座</strong><br>
+                                ${ticket.name} (${ticket.age}岁)<br>
+                                <small>${ticket.timestamp}</small>
+                            </div>
+                        `;
+                    }
                 });
-                reservedList.innerHTML = html;
+                reservedList.innerHTML = html || '<div class="ticket-empty">暂无预订票据</div>';
             }
 
-            // 显示购票记录
+            // 显示已购票据
             if (userTickets.purchased.size === 0) {
-                purchasedList.innerHTML = '<span style="color: #888;">暂无购票</span>';
+                purchasedList.innerHTML = '<div class="ticket-empty">暂无购票记录</div>';
             } else {
                 let html = '';
                 userTickets.purchased.forEach((ticket, seatNumber) => {
-                    html += `
-                        <div class="ticket-item" onclick="selectUserSeat(${seatNumber})">
-                            <strong>第${ticket.seat.row}排${ticket.seat.col}座</strong><br>
-                            ${ticket.name} (${ticket.age}岁)<br>
-                            <small>${ticket.timestamp}</small>
-                        </div>
-                    `;
-                });
-                purchasedList.innerHTML = html;
-            }
-        }
-
-        // 选择用户的座位
-        function selectUserSeat(seatNumber) {
-            // 找到对应的座位对象
-            for (let row = 0; row < seats.length; row++) {
-                if (!seats[row]) continue;
-                for (let col = 0; col < seats[row].length; col++) {
-                    if (!seats[row][col]) continue;
-                    const seat = seats[row][col];
-                    if (seat.number === seatNumber) {
-                        // 清空当前选择，选中这个座位
-                        selectedSeats = [seat];
-                        updateSelectedSeatsDisplay();
-                        drawCinema();
-                        updateTotalPrice();
-                        return;
+                    // 只显示当前用户的票据
+                    if (ticket.userId === currentUser.username) {
+                        html += `
+                            <div class="ticket-item" onclick="selectUserSeat(${seatNumber})">
+                                <strong>第${ticket.seat.row}排${ticket.seat.col}座</strong><br>
+                                ${ticket.name} (${ticket.age}岁)<br>
+                                <small>${ticket.timestamp}</small>
+                            </div>
+                        `;
                     }
-                }
+                });
+                purchasedList.innerHTML = html || '<div class="ticket-empty">暂无购票记录</div>';
             }
         }
 
-        // 显示购票历史
-        function showTicketHistory() {
-            if (!currentUser) {
-                alert('请先登录！');
-                return;
-            }
-
-            let historyText = `🎫 ${currentUser.username} 的购票历史\n\n`;
-
-            // 统计信息
-            const reservedCount = userTickets.reserved.size;
-            const purchasedCount = userTickets.purchased.size;
-            const totalCount = reservedCount + purchasedCount;
-
-            if (totalCount === 0) {
-                alert(`${currentUser.username}，您还没有任何购票记录。`);
-                return;
-            }
-
-            historyText += `📊 统计信息：\n`;
-            historyText += `• 总票数：${totalCount} 张\n`;
-            historyText += `• 已购票：${purchasedCount} 张\n`;
-            historyText += `• 预订票：${reservedCount} 张\n\n`;
-
-            // 已购票历史
-            if (purchasedCount > 0) {
-                historyText += `💳 已购票 (${purchasedCount}张)：\n`;
-                const purchasedArray = Array.from(userTickets.purchased.entries())
-                    .sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp)); // 按时间倒序
-
-                purchasedArray.forEach(([seatNumber, ticket], index) => {
-                    const seat = ticket.seat;
-                    const price = ticket.age < 15 ? TICKET_PRICES.child :
-                        ticket.age >= 60 ? TICKET_PRICES.senior : TICKET_PRICES.adult;
-                    historyText += `${index + 1}. 第${seat.row}排${seat.col}座 - ${ticket.name} (${ticket.age}岁) - ¥${price}\n`;
-                    historyText += `   购票时间：${ticket.timestamp}\n`;
-                });
-                historyText += '\n';
-            }
-
-            // 预订票历史
-            if (reservedCount > 0) {
-                historyText += `📝 预订票 (${reservedCount}张)：\n`;
-                const reservedArray = Array.from(userTickets.reserved.entries())
-                    .sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp)); // 按时间倒序
-
-                reservedArray.forEach(([seatNumber, ticket], index) => {
-                    const seat = ticket.seat;
-                    const price = ticket.age < 15 ? TICKET_PRICES.child :
-                        ticket.age >= 60 ? TICKET_PRICES.senior : TICKET_PRICES.adult;
-                    historyText += `${index + 1}. 第${seat.row}排${seat.col}座 - ${ticket.name} (${ticket.age}岁) - ¥${price}\n`;
-                    historyText += `   预订时间：${ticket.timestamp}\n`;
-                });
-                historyText += '\n';
-            }
-
-            // 计算总金额
-            let totalAmount = 0;
-            userTickets.purchased.forEach(ticket => {
-                const price = ticket.age < 15 ? TICKET_PRICES.child :
-                    ticket.age >= 60 ? TICKET_PRICES.senior : TICKET_PRICES.adult;
-                totalAmount += price;
-            });
-
-            if (totalAmount > 0) {
-                historyText += `💰 已消费总金额：¥${totalAmount}\n`;
-            }
-
-            historyText += `\n📅 查询时间：${new Date().toLocaleString()}`;
-
-            alert(historyText);
-        }
+        // ...existing code...
     </script>
 
     <!-- 登录/注册模态框 -->
