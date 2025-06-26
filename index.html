@@ -540,11 +540,13 @@
             ctx = canvas.getContext('2d');
 
             initializeSeats();
-            drawCinema();
             addEventListeners();
 
             // 添加一些模拟的已售座位
             addMockSoldSeats();
+
+            // 在添加模拟数据后再绘制影院
+            drawCinema();
 
             // 初始化用户票据显示
             refreshUserTickets();
@@ -1325,9 +1327,7 @@
 
                 const row = Math.ceil(seatNumber / cinemaConfig.seatsPerRow);
                 const col = ((seatNumber - 1) % cinemaConfig.seatsPerRow) + 1;
-                const seat = { row, col, number: seatNumber };
-
-                soldSeats.add(seatNumber);
+                const seat = { row, col, number: seatNumber }; soldSeats.add(seatNumber);
                 userTickets.purchased.set(seatNumber, {
                     name: '我的购票',
                     age: getRandomAge(),
@@ -1335,9 +1335,6 @@
                     seat: seat
                 });
             }
-
-            // 刷新用户票据显示
-            refreshUserTickets();
         }
 
         // 刷新用户票据显示
