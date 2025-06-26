@@ -330,6 +330,235 @@
             border-bottom: none;
         }
 
+        /* 用户登录相关样式 */
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .login-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .login-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .logout-btn {
+            background: none;
+            color: rgba(255, 255, 255, 0.8);
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            text-decoration: underline;
+            transition: color 0.3s;
+        }
+
+        .logout-btn:hover {
+            color: white;
+        }
+
+        .history-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 6px 12px;
+            margin: 0 8px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .history-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+            color: white;
+        }
+
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 0;
+            border: none;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            position: relative;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .close {
+            color: rgba(255, 255, 255, 0.8);
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            line-height: 1;
+            cursor: pointer;
+            position: absolute;
+            top: 15px;
+            right: 20px;
+        }
+
+        .close:hover {
+            color: white;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .form-tabs {
+            display: flex;
+            margin-bottom: 25px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 5px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: none;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            color: #666;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-field {
+            margin-bottom: 20px;
+        }
+
+        .form-field label {
+            display: block;
+            margin-bottom: 5px;
+            color: #2c3e50;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .form-field input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+
+        .form-field input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.2);
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.3s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .error-msg {
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .success-msg {
+            color: #27ae60;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
         @media (max-width: 768px) {
             .main-content {
                 flex-direction: column;
@@ -356,6 +585,19 @@
         <div class="header">
             <h1>🎬 电影院选座系统</h1>
             <p>体验最佳的观影选座服务</p>
+            <div class="user-section">
+                <!-- 用户未登录状态 -->
+                <div id="loginSection" class="login-section">
+                    <button class="login-btn" onclick="openLoginModal()">🔑 登录 / 注册</button>
+                </div>
+                <!-- 用户已登录状态 -->
+                <div id="userSection" class="user-info" style="display: none;">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <span id="userName">用户名</span>
+                    <button class="history-btn" onclick="showTicketHistory()">📋 购票历史</button>
+                    <button class="logout-btn" onclick="logout()">退出</button>
+                </div>
+            </div>
         </div>
 
         <div class="main-content">
@@ -553,6 +795,17 @@
             purchased: new Map() // 用户购买的票 seat_number -> {name, age, timestamp}
         };
 
+        // 用户登录系统
+        let currentUser = null; // 当前登录用户
+        let userDatabase = {}; // 模拟用户数据库 (localStorage)
+
+        // 用户数据存储键名
+        const STORAGE_KEYS = {
+            USERS: 'cinema_users',
+            CURRENT_USER: 'cinema_current_user',
+            USER_TICKETS: 'cinema_user_tickets'
+        };
+
         // 座位状态常量
         const SEAT_STATUS = {
             AVAILABLE: 'available',
@@ -573,6 +826,9 @@
             canvas = document.getElementById('cinemaCanvas');
             ctx = canvas.getContext('2d');
 
+            // 初始化用户系统
+            initializeUserSystem();
+
             initializeSeats();
             addEventListeners();
 
@@ -586,39 +842,344 @@
             refreshUserTickets();
         });
 
-        // 添加事件监听器
-        function addEventListeners() {
-            canvas.addEventListener('click', handleSeatClick);
+        // 初始化用户系统
+        function initializeUserSystem() {
+            // 从localStorage加载用户数据
+            loadUserData();
 
-            // 监听Ctrl键
-            document.addEventListener('keydown', function (e) {
-                if (e.key === 'Control') {
-                    ctrlPressed = true;
-                }
-            });
-
-            document.addEventListener('keyup', function (e) {
-                if (e.key === 'Control') {
-                    ctrlPressed = false;
-                }
-            });
-
-            // 监听年龄输入变化，实时更新座位显示
-            const customerAgeInput = document.getElementById('customerAge');
-            if (customerAgeInput) {
-                customerAgeInput.addEventListener('input', function () {
-                    drawCinema(); // 重新绘制座位，应用年龄限制
-                });
-            }
-
-            // 监听票务类型变化，重新绘制座位
-            const ticketTypeSelect = document.getElementById('ticketType');
-            if (ticketTypeSelect) {
-                ticketTypeSelect.addEventListener('change', function () {
-                    drawCinema(); // 重新绘制座位
-                });
+            // 检查是否有当前登录用户
+            const savedUser = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                updateUserUI();
+                loadUserTickets();
             }
         }
+
+        // 从localStorage加载用户数据
+        function loadUserData() {
+            const users = localStorage.getItem(STORAGE_KEYS.USERS);
+            if (users) {
+                userDatabase = JSON.parse(users);
+            }
+        }
+
+        // 保存用户数据到localStorage
+        function saveUserData() {
+            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(userDatabase));
+        }
+
+        // 加载用户票据数据
+        function loadUserTickets() {
+            if (!currentUser) return;
+
+            const userTicketsKey = STORAGE_KEYS.USER_TICKETS + '_' + currentUser.username;
+            const savedTickets = localStorage.getItem(userTicketsKey);
+
+            if (savedTickets) {
+                const tickets = JSON.parse(savedTickets);
+                userTickets.reserved = new Map(tickets.reserved || []);
+                userTickets.purchased = new Map(tickets.purchased || []);
+            } else {
+                // 如果没有保存的票据，初始化为空
+                userTickets.reserved = new Map();
+                userTickets.purchased = new Map();
+            }
+
+            // 重新绘制座位显示用户票据
+            drawCinema();
+            refreshUserTickets();
+        }
+
+        // 保存用户票据数据
+        function saveUserTickets() {
+            if (!currentUser) return;
+
+            const userTicketsKey = STORAGE_KEYS.USER_TICKETS + '_' + currentUser.username;
+            const tickets = {
+                reserved: Array.from(userTickets.reserved),
+                purchased: Array.from(userTickets.purchased)
+            };
+
+            localStorage.setItem(userTicketsKey, JSON.stringify(tickets));
+        }
+
+        // 打开登录模态框
+        function openLoginModal() {
+            document.getElementById('loginModal').style.display = 'block';
+            // 清空表单
+            clearLoginForms();
+            // 默认显示登录标签
+            switchTab('login');
+        }
+
+        // 关闭登录模态框
+        function closeLoginModal() {
+            document.getElementById('loginModal').style.display = 'none';
+            clearLoginForms();
+        }
+
+        // 切换登录/注册标签
+        function switchTab(tabName) {
+            // 隐藏所有标签内容
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // 移除所有标签按钮的active类
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // 显示选中的标签
+            document.getElementById(tabName + 'Tab').classList.add('active');
+
+            // 激活对应的按钮
+            event.target.classList.add('active');
+
+            // 清空错误消息
+            clearErrorMessages();
+        }
+
+        // 清空登录表单
+        function clearLoginForms() {
+            // 清空登录表单
+            document.getElementById('loginForm').reset();
+            document.getElementById('registerForm').reset();
+
+            // 清空错误消息
+            clearErrorMessages();
+        }
+
+        // 清空错误消息
+        function clearErrorMessages() {
+            document.querySelectorAll('.error-msg, .success-msg').forEach(msg => {
+                msg.textContent = '';
+            });
+        }
+
+        // 处理登录
+        function handleLogin(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            // 清空之前的错误消息
+            clearErrorMessages();
+
+            // 验证输入
+            if (!username || !password) {
+                showError('loginError', '请填写完整的用户名和密码');
+                return;
+            }
+
+            // 检查用户是否存在
+            if (!userDatabase[username]) {
+                showError('loginError', '用户不存在，请先注册');
+                return;
+            }
+
+            // 验证密码
+            if (userDatabase[username].password !== password) {
+                showError('loginError', '密码错误，请重新输入');
+                return;
+            }
+
+            // 登录成功
+            currentUser = {
+                username: username,
+                email: userDatabase[username].email,
+                loginTime: new Date().getTime()
+            };
+
+            // 保存当前用户到localStorage
+            localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(currentUser));
+
+            // 更新UI
+            updateUserUI();
+
+            // 加载用户票据
+            loadUserTickets();
+
+            // 显示成功消息
+            showSuccess('loginSuccess', '登录成功！');
+
+            // 2秒后关闭模态框
+            setTimeout(() => {
+                closeLoginModal();
+            }, 1500);
+        }
+
+        // 处理注册
+        function handleRegister(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('registerUsername').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const email = document.getElementById('registerEmail').value.trim();
+
+            // 清空之前的错误消息
+            clearErrorMessages();
+
+            // 验证输入
+            if (!username || !password) {
+                showError('registerError', '用户名和密码不能为空');
+                return;
+            }
+
+            if (username.length < 3 || username.length > 20) {
+                showError('registerUsernameError', '用户名长度应在3-20个字符之间');
+                return;
+            }
+
+            if (password.length < 6) {
+                showError('registerPasswordError', '密码长度不能少于6个字符');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showError('confirmPasswordError', '两次输入的密码不一致');
+                return;
+            }
+
+            // 检查用户名是否已存在
+            if (userDatabase[username]) {
+                showError('registerUsernameError', '用户名已存在，请选择其他用户名');
+                return;
+            }
+
+            // 验证邮箱格式（如果填写了）
+            if (email && !isValidEmail(email)) {
+                showError('registerEmailError', '邮箱格式不正确');
+                return;
+            }
+
+            // 创建新用户
+            userDatabase[username] = {
+                username: username,
+                password: password,
+                email: email,
+                registerTime: new Date().getTime()
+            };
+
+            // 保存用户数据
+            saveUserData();
+
+            // 显示成功消息
+            showSuccess('registerSuccess', '注册成功！请登录');
+
+            // 2秒后切换到登录标签
+            setTimeout(() => {
+                switchTabByName('login');
+                // 自动填入用户名
+                document.getElementById('loginUsername').value = username;
+            }, 1500);
+        }
+
+        // 用户登出
+        function logout() {
+            if (!currentUser) return;
+
+            if (confirm('确定要退出登录吗？')) {
+                // 清空当前用户
+                currentUser = null;
+
+                // 清空localStorage中的当前用户
+                localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+
+                // 清空用户票据
+                userTickets.reserved = new Map();
+                userTickets.purchased = new Map();
+
+                // 更新UI
+                updateUserUI();
+
+                // 重新绘制座位（清除用户票据显示）
+                drawCinema();
+                refreshUserTickets();
+
+                alert('已成功退出登录');
+            }
+        }
+
+        // 更新用户UI显示
+        function updateUserUI() {
+            const loginSection = document.getElementById('loginSection');
+            const userSection = document.getElementById('userSection');
+            const userName = document.getElementById('userName');
+            const userAvatar = document.getElementById('userAvatar');
+
+            if (currentUser) {
+                // 显示用户信息，隐藏登录按钮
+                loginSection.style.display = 'none';
+                userSection.style.display = 'flex';
+                userName.textContent = currentUser.username;
+
+                // 设置用户头像为用户名首字母
+                const firstChar = currentUser.username.charAt(0).toUpperCase();
+                userAvatar.textContent = firstChar;
+            } else {
+                // 显示登录按钮，隐藏用户信息
+                loginSection.style.display = 'block';
+                userSection.style.display = 'none';
+            }
+        }
+
+        // 显示错误消息
+        function showError(elementId, message) {
+            const errorElement = document.getElementById(elementId);
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.style.color = '#e74c3c';
+            }
+        }
+
+        // 显示成功消息
+        function showSuccess(elementId, message) {
+            const successElement = document.getElementById(elementId);
+            if (successElement) {
+                successElement.textContent = message;
+                successElement.style.color = '#27ae60';
+            }
+        }
+
+        // 验证邮箱格式
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        // 通过名称切换标签（用于编程调用）
+        function switchTabByName(tabName) {
+            // 隐藏所有标签内容
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // 移除所有标签按钮的active类
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // 显示选中的标签
+            document.getElementById(tabName + 'Tab').classList.add('active');
+
+            // 激活对应的按钮
+            document.querySelector(`.tab-btn[onclick="switchTab('${tabName}')"]`).classList.add('active');
+
+            // 清空错误消息
+            clearErrorMessages();
+        }
+
+        // 关闭模态框（点击外部区域）
+        window.onclick = function (event) {
+            const modal = document.getElementById('loginModal');
+            if (event.target === modal) {
+                closeLoginModal();
+            }
+        };
 
         // 初始化座位数据
         function initializeSeats() {
@@ -1325,6 +1886,13 @@
 
         // 预订票
         function reserveTickets() {
+            // 检查用户是否已登录
+            if (!currentUser) {
+                alert('请先登录后再进行预订操作！');
+                openLoginModal();
+                return;
+            }
+
             if (selectedSeats.length === 0) {
                 alert('请先选择座位！');
                 return;
@@ -1344,16 +1912,31 @@
                 if (ticketType === 'individual') {
                     const name = document.getElementById('customerName').value.trim();
                     const age = parseInt(document.getElementById('customerAge').value);
-                    userTickets.reserved.set(seat.number, { name, age, timestamp, seat });
+                    userTickets.reserved.set(seat.number, {
+                        name,
+                        age,
+                        timestamp,
+                        seat,
+                        username: currentUser.username // 绑定到当前用户
+                    });
                 } else {
                     // 团体票，使用第一个成员的信息作为代表
                     const name = document.getElementById('memberName0').value.trim();
                     const age = parseInt(document.getElementById('memberAge0').value);
-                    userTickets.reserved.set(seat.number, { name: name + '(团体)', age, timestamp, seat });
+                    userTickets.reserved.set(seat.number, {
+                        name: name + '(团体)',
+                        age,
+                        timestamp,
+                        seat,
+                        username: currentUser.username // 绑定到当前用户
+                    });
                 }
             });
 
-            alert(`预订成功！已预订 ${selectedSeats.length} 个座位。\n预订时间：${timestamp}`);
+            // 保存用户票据到localStorage
+            saveUserTickets();
+
+            alert(`预订成功！已预订 ${selectedSeats.length} 个座位。\n预订时间：${timestamp}\n用户：${currentUser.username}`);
 
             selectedSeats = [];
             updateSelectedSeatsDisplay();
@@ -1364,6 +1947,13 @@
 
         // 直接购票
         function purchaseTickets() {
+            // 检查用户是否已登录
+            if (!currentUser) {
+                alert('请先登录后再进行购票操作！');
+                openLoginModal();
+                return;
+            }
+
             if (selectedSeats.length === 0) {
                 alert('请先选择座位！');
                 return;
@@ -1374,7 +1964,7 @@
             }
 
             const totalPrice = document.getElementById('totalPrice').textContent;
-            const confirmed = confirm(`确认购买这些座位吗？\n${totalPrice}`);
+            const confirmed = confirm(`确认购买这些座位吗？\n${totalPrice}\n用户：${currentUser.username}`);
 
             if (confirmed) {
                 const ticketType = document.getElementById('ticketType').value;
@@ -1389,16 +1979,31 @@
                     if (ticketType === 'individual') {
                         const name = document.getElementById('customerName').value.trim();
                         const age = parseInt(document.getElementById('customerAge').value);
-                        userTickets.purchased.set(seat.number, { name, age, timestamp, seat });
+                        userTickets.purchased.set(seat.number, {
+                            name,
+                            age,
+                            timestamp,
+                            seat,
+                            username: currentUser.username // 绑定到当前用户
+                        });
                     } else {
                         // 团体票，使用第一个成员的信息作为代表
                         const name = document.getElementById('memberName0').value.trim();
                         const age = parseInt(document.getElementById('memberAge0').value);
-                        userTickets.purchased.set(seat.number, { name: name + '(团体)', age, timestamp, seat });
+                        userTickets.purchased.set(seat.number, {
+                            name: name + '(团体)',
+                            age,
+                            timestamp,
+                            seat,
+                            username: currentUser.username // 绑定到当前用户
+                        });
                     }
                 });
 
-                alert(`购票成功！${totalPrice}\n购票时间：${timestamp}`);
+                // 保存用户票据到localStorage
+                saveUserTickets();
+
+                alert(`购票成功！${totalPrice}\n购票时间：${timestamp}\n用户：${currentUser.username}`);
 
                 selectedSeats = [];
                 updateSelectedSeatsDisplay();
@@ -1410,6 +2015,13 @@
 
         // 取消预订
         function cancelReservation() {
+            // 检查用户是否已登录
+            if (!currentUser) {
+                alert('请先登录后再进行取消预订操作！');
+                openLoginModal();
+                return;
+            }
+
             if (selectedSeats.length === 0) {
                 alert('请先选择要取消预订的座位！');
                 return;
@@ -1421,15 +2033,21 @@
             selectedSeats.forEach(seat => {
                 if (userTickets.reserved.has(seat.number)) {
                     const ticket = userTickets.reserved.get(seat.number);
-                    reservedSeats.delete(seat.number);
-                    userTickets.reserved.delete(seat.number);
-                    canceledSeats.push(`第${seat.row}排${seat.col}座 (${ticket.name})`);
-                    hasReserved = true;
+                    // 检查是否是当前用户的预订
+                    if (ticket.username === currentUser.username) {
+                        reservedSeats.delete(seat.number);
+                        userTickets.reserved.delete(seat.number);
+                        canceledSeats.push(`第${seat.row}排${seat.col}座 (${ticket.name})`);
+                        hasReserved = true;
+                    }
                 }
             });
 
             if (hasReserved) {
-                alert(`预订已取消！\n取消的座位：\n${canceledSeats.join('\n')}`);
+                // 保存用户票据到localStorage
+                saveUserTickets();
+
+                alert(`预订已取消！\n取消的座位：\n${canceledSeats.join('\n')}\n用户：${currentUser.username}`);
                 selectedSeats = [];
                 updateSelectedSeatsDisplay();
                 drawCinema();
@@ -1441,6 +2059,13 @@
 
         // 退票
         function refundTickets() {
+            // 检查用户是否已登录
+            if (!currentUser) {
+                alert('请先登录后再进行退票操作！');
+                openLoginModal();
+                return;
+            }
+
             if (selectedSeats.length === 0) {
                 alert('请先选择要退票的座位！');
                 return;
@@ -1453,25 +2078,31 @@
             selectedSeats.forEach(seat => {
                 if (userTickets.purchased.has(seat.number)) {
                     const ticket = userTickets.purchased.get(seat.number);
-                    soldSeats.delete(seat.number);
-                    userTickets.purchased.delete(seat.number);
-                    refundedSeats.push(`第${seat.row}排${seat.col}座 (${ticket.name})`);
+                    // 检查是否是当前用户的购票
+                    if (ticket.username === currentUser.username) {
+                        soldSeats.delete(seat.number);
+                        userTickets.purchased.delete(seat.number);
+                        refundedSeats.push(`第${seat.row}排${seat.col}座 (${ticket.name})`);
 
-                    // 计算退款金额
-                    if (ticket.age < 15) {
-                        totalRefund += TICKET_PRICES.child;
-                    } else if (ticket.age >= 60) {
-                        totalRefund += TICKET_PRICES.senior;
-                    } else {
-                        totalRefund += TICKET_PRICES.adult;
+                        // 计算退款金额
+                        if (ticket.age < 15) {
+                            totalRefund += TICKET_PRICES.child;
+                        } else if (ticket.age >= 60) {
+                            totalRefund += TICKET_PRICES.senior;
+                        } else {
+                            totalRefund += TICKET_PRICES.adult;
+                        }
+
+                        hasSold = true;
                     }
-
-                    hasSold = true;
                 }
             });
 
             if (hasSold) {
-                alert(`退票成功！退款金额：¥${totalRefund}\n退票座位：\n${refundedSeats.join('\n')}`);
+                // 保存用户票据到localStorage
+                saveUserTickets();
+
+                alert(`退票成功！退款金额：¥${totalRefund}\n退票座位：\n${refundedSeats.join('\n')}\n用户：${currentUser.username}`);
                 selectedSeats = [];
                 updateSelectedSeatsDisplay();
                 drawCinema();
@@ -1692,7 +2323,145 @@
                 }
             }
         }
+
+        // 显示购票历史
+        function showTicketHistory() {
+            if (!currentUser) {
+                alert('请先登录！');
+                return;
+            }
+
+            let historyText = `🎫 ${currentUser.username} 的购票历史\n\n`;
+
+            // 统计信息
+            const reservedCount = userTickets.reserved.size;
+            const purchasedCount = userTickets.purchased.size;
+            const totalCount = reservedCount + purchasedCount;
+
+            if (totalCount === 0) {
+                alert(`${currentUser.username}，您还没有任何购票记录。`);
+                return;
+            }
+
+            historyText += `📊 统计信息：\n`;
+            historyText += `• 总票数：${totalCount} 张\n`;
+            historyText += `• 已购票：${purchasedCount} 张\n`;
+            historyText += `• 预订票：${reservedCount} 张\n\n`;
+
+            // 已购票历史
+            if (purchasedCount > 0) {
+                historyText += `💳 已购票 (${purchasedCount}张)：\n`;
+                const purchasedArray = Array.from(userTickets.purchased.entries())
+                    .sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp)); // 按时间倒序
+
+                purchasedArray.forEach(([seatNumber, ticket], index) => {
+                    const seat = ticket.seat;
+                    const price = ticket.age < 15 ? TICKET_PRICES.child :
+                        ticket.age >= 60 ? TICKET_PRICES.senior : TICKET_PRICES.adult;
+                    historyText += `${index + 1}. 第${seat.row}排${seat.col}座 - ${ticket.name} (${ticket.age}岁) - ¥${price}\n`;
+                    historyText += `   购票时间：${ticket.timestamp}\n`;
+                });
+                historyText += '\n';
+            }
+
+            // 预订票历史
+            if (reservedCount > 0) {
+                historyText += `📝 预订票 (${reservedCount}张)：\n`;
+                const reservedArray = Array.from(userTickets.reserved.entries())
+                    .sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp)); // 按时间倒序
+
+                reservedArray.forEach(([seatNumber, ticket], index) => {
+                    const seat = ticket.seat;
+                    const price = ticket.age < 15 ? TICKET_PRICES.child :
+                        ticket.age >= 60 ? TICKET_PRICES.senior : TICKET_PRICES.adult;
+                    historyText += `${index + 1}. 第${seat.row}排${seat.col}座 - ${ticket.name} (${ticket.age}岁) - ¥${price}\n`;
+                    historyText += `   预订时间：${ticket.timestamp}\n`;
+                });
+                historyText += '\n';
+            }
+
+            // 计算总金额
+            let totalAmount = 0;
+            userTickets.purchased.forEach(ticket => {
+                const price = ticket.age < 15 ? TICKET_PRICES.child :
+                    ticket.age >= 60 ? TICKET_PRICES.senior : TICKET_PRICES.adult;
+                totalAmount += price;
+            });
+
+            if (totalAmount > 0) {
+                historyText += `💰 已消费总金额：¥${totalAmount}\n`;
+            }
+
+            historyText += `\n📅 查询时间：${new Date().toLocaleString()}`;
+
+            alert(historyText);
+        }
     </script>
+
+    <!-- 登录/注册模态框 -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>用户中心</h2>
+                <span class="close" onclick="closeLoginModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-tabs">
+                    <button class="tab-btn active" onclick="switchTab('login')">登录</button>
+                    <button class="tab-btn" onclick="switchTab('register')">注册</button>
+                </div>
+
+                <!-- 登录表单 -->
+                <div id="loginTab" class="tab-content active">
+                    <form id="loginForm" onsubmit="handleLogin(event)">
+                        <div class="form-field">
+                            <label for="loginUsername">用户名</label>
+                            <input type="text" id="loginUsername" required minlength="3" maxlength="20">
+                            <div class="error-msg" id="loginUsernameError"></div>
+                        </div>
+                        <div class="form-field">
+                            <label for="loginPassword">密码</label>
+                            <input type="password" id="loginPassword" required minlength="6">
+                            <div class="error-msg" id="loginPasswordError"></div>
+                        </div>
+                        <button type="submit" class="submit-btn">登录</button>
+                        <div class="error-msg" id="loginError"></div>
+                        <div class="success-msg" id="loginSuccess"></div>
+                    </form>
+                </div>
+
+                <!-- 注册表单 -->
+                <div id="registerTab" class="tab-content">
+                    <form id="registerForm" onsubmit="handleRegister(event)">
+                        <div class="form-field">
+                            <label for="registerUsername">用户名</label>
+                            <input type="text" id="registerUsername" required minlength="3" maxlength="20"
+                                pattern="[a-zA-Z0-9\u4e00-\u9fa5]+" title="用户名只能包含字母、数字和中文">
+                            <div class="error-msg" id="registerUsernameError"></div>
+                        </div>
+                        <div class="form-field">
+                            <label for="registerPassword">密码</label>
+                            <input type="password" id="registerPassword" required minlength="6" maxlength="50">
+                            <div class="error-msg" id="registerPasswordError"></div>
+                        </div>
+                        <div class="form-field">
+                            <label for="confirmPassword">确认密码</label>
+                            <input type="password" id="confirmPassword" required minlength="6" maxlength="50">
+                            <div class="error-msg" id="confirmPasswordError"></div>
+                        </div>
+                        <div class="form-field">
+                            <label for="registerEmail">邮箱 (可选)</label>
+                            <input type="email" id="registerEmail" maxlength="100">
+                            <div class="error-msg" id="registerEmailError"></div>
+                        </div>
+                        <button type="submit" class="submit-btn">注册</button>
+                        <div class="error-msg" id="registerError"></div>
+                        <div class="success-msg" id="registerSuccess"></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
