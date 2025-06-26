@@ -394,8 +394,12 @@
                         <span>我的票(选中)</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-color" style="background-color: #95a5a6;"></div>
-                        <span>不可选</span>
+                        <div class="legend-color"
+                            style="background-color: #95a5a6; border: 2px solid #e74c3c; position: relative;">
+                            <span
+                                style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 8px;">🚫</span>
+                        </div>
+                        <span>年龄限制</span>
                     </div>
                 </div>
             </div>
@@ -490,10 +494,12 @@
                         <p><strong>手动选座：</strong> 点击座位进行单选</p>
                         <p><strong>多选：</strong> 按住Ctrl键+点击座位</p>
                         <p><strong>我的座位选中：</strong> 您的座位被选中时会有金色发光边框和★标记</p>
-                        <p><strong>年龄限制：</strong></p>
+                        <p><strong>实时年龄限制：</strong> 输入年龄后，不可选座位会立即显示🚫标记并变灰</p>
+                        <p><strong>年龄限制规则：</strong></p>
                         <p>• 少年(15岁以下)：不能坐前3排</p>
                         <p>• 老年人(60岁以上)：不能坐后3排</p>
                         <p>• 成年人：无限制</p>
+                        <p>• 团体票：任一成员受限则该座位不可选</p>
                     </div>
 
                     <!-- 票价信息 -->
@@ -552,8 +558,7 @@
             AVAILABLE: 'available',
             SELECTED: 'selected',
             RESERVED: 'reserved',
-            SOLD: 'sold',
-            UNAVAILABLE: 'unavailable'
+            SOLD: 'sold'
         };
 
         // 票价配置
@@ -597,6 +602,22 @@
                     ctrlPressed = false;
                 }
             });
+
+            // 监听年龄输入变化，实时更新座位显示
+            const customerAgeInput = document.getElementById('customerAge');
+            if (customerAgeInput) {
+                customerAgeInput.addEventListener('input', function () {
+                    drawCinema(); // 重新绘制座位，应用年龄限制
+                });
+            }
+
+            // 监听票务类型变化，重新绘制座位
+            const ticketTypeSelect = document.getElementById('ticketType');
+            if (ticketTypeSelect) {
+                ticketTypeSelect.addEventListener('change', function () {
+                    drawCinema(); // 重新绘制座位
+                });
+            }
         }
 
         // 初始化座位数据
@@ -728,6 +749,9 @@
             const isUserPurchased = userTickets.purchased.has(seat.number);
             const isCurrentlySelected = selectedSeats.some(s => s.number === seat.number) || seat.status === SEAT_STATUS.SELECTED;
 
+            // 检查年龄限制是否让座位不可选
+            const isAgeRestricted = isRestrictedByAge(seat);
+
             // 确定座位颜色和边框样式
             if (soldSeats.has(seat.number) || seat.status === SEAT_STATUS.SOLD) {
                 if (isUserPurchased) {
@@ -783,8 +807,11 @@
                     borderColor = '#ff9800';
                     borderWidth = 2;
                 }
-            } else if (seat.status === SEAT_STATUS.UNAVAILABLE) {
-                color = '#95a5a6'; // 灰色 - 不可选
+            } else if (isAgeRestricted) {
+                // 年龄限制座位 - 灰色 + 红色边框
+                color = '#95a5a6';
+                borderColor = '#e74c3c';
+                borderWidth = 2;
             } else {
                 color = '#27ae60'; // 绿色 - 空座
             }
@@ -832,6 +859,14 @@
                     ctx.textAlign = 'center';
                     ctx.fillText('我', x + size / 2, y + size - 3);
                 }
+            }
+
+            // 为年龄限制的座位添加禁止标记
+            if (isAgeRestricted && !soldSeats.has(seat.number) && !reservedSeats.has(seat.number)) {
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('🚫', x + size / 2, y + size / 2 + 4);
             }
 
             // 为选中的用户座位添加额外的视觉提示
@@ -902,6 +937,26 @@
 
         // 处理座位选择逻辑
         function handleSeatSelection(seat) {
+            // 首先检查年龄限制
+            if (isRestrictedByAge(seat) && !soldSeats.has(seat.number) && !reservedSeats.has(seat.number)) {
+                const ticketType = document.getElementById('ticketType').value;
+                let restrictionMsg = '';
+
+                if (ticketType === 'individual') {
+                    const age = parseInt(document.getElementById('customerAge').value);
+                    if (age < 15 && seat.row <= 3) {
+                        restrictionMsg = `少年（15岁以下）不能坐前三排！您当前年龄：${age}岁，该座位为第${seat.row}排。`;
+                    } else if (age >= 60 && seat.row > cinemaConfig.rows - 3) {
+                        restrictionMsg = `老年人（60岁以上）不能坐最后三排！您当前年龄：${age}岁，该座位为第${seat.row}排。`;
+                    }
+                } else if (ticketType === 'group') {
+                    restrictionMsg = '团体中有成员因年龄限制无法选择此座位！请检查成员年龄设置。';
+                }
+
+                alert(restrictionMsg);
+                return;
+            }
+
             // 检查座位是否可选
             if (soldSeats.has(seat.number) || reservedSeats.has(seat.number)) {
                 // 如果是用户自己的票，允许选择用于取消/退票
@@ -921,7 +976,7 @@
                     }
                 }
             } else {
-                // 检查年龄限制（仅对新选座位）
+                // 检查年龄限制（仅对新选座位）- 这里保留原有的交互式检查
                 if (!checkAgeRestriction(seat)) {
                     return;
                 }
@@ -948,6 +1003,46 @@
             updateSelectedSeatsDisplay();
             drawCinema();
             updateTotalPrice();
+        }
+
+        // 检查座位是否因年龄限制而不可选（用于UI显示）
+        function isRestrictedByAge(seat) {
+            const ticketType = document.getElementById('ticketType').value;
+
+            if (ticketType === 'individual') {
+                const age = parseInt(document.getElementById('customerAge').value);
+                if (!age) return false; // 如果没有输入年龄，不限制
+
+                // 少年（15岁以下）不能坐前三排
+                if (age < 15 && seat.row <= 3) {
+                    return true;
+                }
+
+                // 老年人（60岁以上）不能坐最后三排
+                if (age >= 60 && seat.row > cinemaConfig.rows - 3) {
+                    return true;
+                }
+            } else if (ticketType === 'group') {
+                // 团体票需要检查所有成员的年龄限制
+                const memberInfos = document.querySelectorAll('.member-info');
+
+                for (let memberInfo of memberInfos) {
+                    const ageInput = memberInfo.querySelector('.member-age');
+                    if (ageInput && ageInput.value) {
+                        const age = parseInt(ageInput.value);
+
+                        // 如果有任何成员受年龄限制，该座位就不可选
+                        if (age < 15 && seat.row <= 3) {
+                            return true;
+                        }
+                        if (age >= 60 && seat.row > cinemaConfig.rows - 3) {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
         }
 
         // 检查年龄限制
@@ -1202,14 +1297,22 @@
             let html = '';
             for (let i = 0; i < groupSize; i++) {
                 html += `
-                    <div class="member-input">
+                    <div class="member-input member-info">
                         <input type="text" id="memberName${i}" placeholder="成员${i + 1}姓名">
-                        <input type="number" id="memberAge${i}" placeholder="年龄" min="1" max="120" style="width: 80px;">
+                        <input type="number" id="memberAge${i}" class="member-age" placeholder="年龄" min="1" max="120" style="width: 80px;">
                     </div>
                 `;
             }
 
             groupMembers.innerHTML = html;
+
+            // 为新生成的年龄输入框添加事件监听器
+            const ageInputs = groupMembers.querySelectorAll('.member-age');
+            ageInputs.forEach(input => {
+                input.addEventListener('input', function () {
+                    drawCinema(); // 重新绘制座位，应用年龄限制
+                });
+            });
         }
 
         // 清空选择
