@@ -17,6 +17,7 @@
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             min-height: 100vh;
             padding: 20px;
+            overflow-x: auto;
         }
 
         .container {
@@ -25,7 +26,7 @@
             background: white;
             border-radius: 15px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
+            overflow-x: auto;
         }
 
         .header {
@@ -51,8 +52,8 @@
         .cinema-section {
             flex: 2;
             min-width: 960px;
-            overflow: auto;
-            /* 添加滚动条支持 */
+            overflow-x: auto;
+            overflow-y: visible;
         }
 
         .control-section {
@@ -565,24 +566,48 @@
             display: block;
         }
 
+        /* 自定义滚动条样式 */
+        .cinema-section::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .cinema-section::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .cinema-section::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .cinema-section::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
         @media (max-width: 768px) {
+            body {
+                padding: 10px;
+                min-width: 980px;
+            }
+
             .main-content {
                 flex-direction: column;
+                gap: 20px;
             }
 
             .cinema-section {
                 min-width: auto;
-                /* 允许水平滚动而不是缩放 Canvas */
                 overflow-x: auto;
+                overflow-y: visible;
             }
 
             .control-section {
                 min-width: auto;
+                width: 100%;
             }
 
-            /* 完全移除 Canvas 的响应式缩放 */
             #cinemaCanvas {
-                /* 保持固定尺寸，允许滚动 */
                 width: 960px !important;
                 height: 720px !important;
             }
@@ -774,8 +799,6 @@
                     <div class="form-group">
                         <button class="btn btn-warning" onclick="reserveTickets()">📝 预订票</button>
                         <button class="btn btn-success" onclick="purchaseTickets()">💳 直接购票</button>
-                    </div>
-                    <div class="form-group">
                         <button class="btn btn-danger" onclick="cancelReservation()">❌ 取消预订</button>
                         <button class="btn btn-danger" onclick="refundTickets()">💸 退票</button>
                     </div>
@@ -1008,21 +1031,8 @@
                     seat.width = seatSize;
                     seat.height = seatSize;
 
-                    // 绘制座位
-                    drawSeat(seat, seat.x, seat.y, seatSize);
-
-                    // 绘制座位号（根据弧形角度调整文本方向）
-                    ctx.fillStyle = '#2c3e50';
-                    ctx.font = '10px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.save();
-
-                    // 根据角度轻微旋转文本，让其更适应弧形
-                    const textRotation = (currentAngle - Math.PI / 2) * 0.2;
-                    ctx.translate(x, y);
-                    ctx.rotate(textRotation);
-                    ctx.fillText(`${seat.row}-${seat.col}`, 0, 3);
-                    ctx.restore();
+                    // 绘制座位（传递角度信息和座位号用于旋转）
+                    drawSeat(seat, seat.x, seat.y, seatSize, currentAngle, `${seat.row}-${seat.col}`);
                 }
 
                 // 绘制排号（在弧形的左侧，调整位置适应更松散的布局）
@@ -1047,7 +1057,7 @@
         }
 
         // 绘制单个座位
-        function drawSeat(seat, x, y, size) {
+        function drawSeat(seat, x, y, size, angle = 0, seatLabel = '') {
             let color;
             let borderColor = '#2c3e50';
             let borderWidth = 1;
@@ -1127,32 +1137,59 @@
                 color = '#27ae60'; // 绿色 - 空座
             }
 
+            // 保存当前绘图状态
+            ctx.save();
+
+            // 计算座位中心点
+            const centerX = x + size / 2;
+            const centerY = y + size / 2;
+
+            // 移动到座位中心点
+            ctx.translate(centerX, centerY);
+
+            // 计算旋转角度，使座位正对银幕
+            // angle是座位相对于弧形中心的角度，我们需要让座位的"前方"（上边）指向银幕方向
+            const rotationAngle = angle - Math.PI / 2; // 减去90度，让座位上边朝向弧形中心（银幕方向）
+            ctx.rotate(rotationAngle);
+
             // 绘制发光效果（仅对选中的用户座位）
             if (hasGlow) {
-                ctx.save();
                 ctx.shadowColor = borderColor;
                 ctx.shadowBlur = 8;
                 ctx.shadowOffsetX = 0;
                 ctx.shadowOffsetY = 0;
             }
 
-            // 绘制座位背景
+            // 绘制座位背景（以座位中心为原点）
             ctx.fillStyle = color;
-            ctx.fillRect(x, y, size, size);
+            ctx.fillRect(-size / 2, -size / 2, size, size);
 
             // 绘制座位边框
             ctx.strokeStyle = borderColor;
             ctx.lineWidth = borderWidth;
-            ctx.strokeRect(x, y, size, size);
+            ctx.strokeRect(-size / 2, -size / 2, size, size);
 
-            // 恢复发光效果设置
-            if (hasGlow) {
-                ctx.restore();
+            // 绘制座位细节（椅背）- 在座位的"前方"（上边）
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.fillRect(-size / 2, -size / 2, size, 3); // 椅背
+
+            // 绘制座位扶手
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.fillRect(-size / 2, -size / 2 + 5, 3, size - 10); // 左扶手
+            ctx.fillRect(size / 2 - 3, -size / 2 + 5, 3, size - 10); // 右扶手
+
+            // 绘制座位号（在旋转后的坐标系中）
+            if (seatLabel && !hasUserMark && !isAgeRestricted) {
+                // 绘制座位号文字
+                ctx.fillStyle = '#1a1a1a'; // 更深的颜色增强对比
+                ctx.font = 'bold 9px Arial'; // 增大字体并加粗
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.strokeStyle = '#ffffff'; // 白色描边
+                ctx.lineWidth = 1;
+                ctx.strokeText(seatLabel, 0, size / 2 - 8); // 先绘制描边
+                ctx.fillText(seatLabel, 0, size / 2 - 8); // 再绘制填充
             }
-
-            // 绘制座位细节（椅背）
-            ctx.fillStyle = 'rgba(0,0,0,0.1)';
-            ctx.fillRect(x, y, size, 5);
 
             // 为用户自己的票添加特殊标记
             if (hasUserMark) {
@@ -1162,13 +1199,26 @@
                     ctx.fillStyle = '#000000';
                     ctx.font = 'bold 10px Arial';
                     ctx.textAlign = 'center';
-                    ctx.fillText('★我★', x + size / 2, y + size / 2 + 3);
+                    ctx.textBaseline = 'middle';
                 } else {
                     // 未选中状态：普通标记
                     ctx.fillStyle = '#ffffff';
                     ctx.font = 'bold 8px Arial';
                     ctx.textAlign = 'center';
-                    ctx.fillText('我', x + size / 2, y + size - 3);
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('我', 0, size / 4);
+                }
+
+                // 在用户座位上也显示座位号（在座位下方）
+                if (seatLabel) {
+                    ctx.fillStyle = '#000000';
+                    ctx.font = 'bold 8px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 0.5;
+                    ctx.strokeText(seatLabel, 0, size / 2 - 8);
+                    ctx.fillText(seatLabel, 0, size / 2 - 8);
                 }
             }
 
@@ -1177,7 +1227,20 @@
                 ctx.fillStyle = '#ffffff';
                 ctx.font = 'bold 12px Arial';
                 ctx.textAlign = 'center';
-                ctx.fillText('🚫', x + size / 2, y + size / 2 + 4);
+                ctx.textBaseline = 'middle';
+                ctx.fillText('🚫', 0, 0);
+
+                // 在年龄限制座位上也显示座位号
+                if (seatLabel) {
+                    ctx.fillStyle = '#2c3e50';
+                    ctx.font = 'bold 8px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 0.5;
+                    ctx.strokeText(seatLabel, 0, size / 2 - 8);
+                    ctx.fillText(seatLabel, 0, size / 2 - 8);
+                }
             }
 
             // 为选中的用户座位添加额外的视觉提示
@@ -1188,39 +1251,40 @@
 
                 // 左上角
                 ctx.beginPath();
-                ctx.moveTo(x, y);
-                ctx.lineTo(x + triangleSize, y);
-                ctx.lineTo(x, y + triangleSize);
+                ctx.moveTo(-size / 2, -size / 2);
+                ctx.lineTo(-size / 2 + triangleSize, -size / 2);
+                ctx.lineTo(-size / 2, -size / 2 + triangleSize);
                 ctx.closePath();
                 ctx.fill();
 
                 // 右上角
                 ctx.beginPath();
-                ctx.moveTo(x + size, y);
-                ctx.lineTo(x + size - triangleSize, y);
-                ctx.lineTo(x + size, y + triangleSize);
+                ctx.moveTo(size / 2, -size / 2);
+                ctx.lineTo(size / 2 - triangleSize, -size / 2);
+                ctx.lineTo(size / 2, -size / 2 + triangleSize);
                 ctx.closePath();
                 ctx.fill();
 
                 // 左下角
                 ctx.beginPath();
-                ctx.moveTo(x, y + size);
-                ctx.lineTo(x + triangleSize, y + size);
-                ctx.lineTo(x, y + size - triangleSize);
+                ctx.moveTo(-size / 2, size / 2);
+                ctx.lineTo(-size / 2 + triangleSize, size / 2);
+                ctx.lineTo(-size / 2, size / 2 - triangleSize);
                 ctx.closePath();
                 ctx.fill();
 
                 // 右下角
                 ctx.beginPath();
-                ctx.moveTo(x + size, y + size);
-                ctx.lineTo(x + size - triangleSize, y + size);
-                ctx.lineTo(x + size, y + size - triangleSize);
+                ctx.moveTo(size / 2, size / 2);
+                ctx.lineTo(size / 2 - triangleSize, size / 2);
+                ctx.lineTo(size / 2, size / 2 - triangleSize);
                 ctx.closePath();
                 ctx.fill();
             }
-        }
 
-        // 处理座位点击
+            // 恢复绘图状态
+            ctx.restore();
+        }        // 处理座位点击
         function handleSeatClick(event) {
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
@@ -2034,6 +2098,7 @@
         // 清空错误信息
         function clearErrorMessages() {
             document.querySelectorAll('.error-msg, .success-msg').forEach(msg => {
+
                 msg.textContent = '';
                 msg.classList.remove('show');
             });
