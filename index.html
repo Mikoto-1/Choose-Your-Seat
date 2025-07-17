@@ -907,18 +907,16 @@
         function updateCanvasSize() {
             const margin = 50;
             const seatSize = 25;
-            const seatGap = 3;
-            const rowHeight = 45;
 
-            // 计算所需的Canvas尺寸
-            const maxRowWidth = (cinemaConfig.seatsPerRow * (seatSize + seatGap)) - seatGap;
-            const arcMaxOffset = Math.pow((cinemaConfig.rows - 1) * 0.15, 2) * 20; // 最大弧形偏移
+            // 弧形布局尺寸计算
+            const baseRadius = 800 * 0.8; // 基础弧形半径
+            const maxRadius = baseRadius * 0.4 + (cinemaConfig.rows - 1) * 35; // 最后一排的半径
 
-            // Canvas宽度：座位宽度 + 弧形偏移 + 左右边距 + 排号空间
-            const requiredWidth = Math.max(800, maxRowWidth + arcMaxOffset * 2 + margin * 2 + 100);
+            // Canvas宽度：需要容纳整个弧形 + 左右边距 + 排号空间
+            const requiredWidth = Math.max(800, maxRadius * 1.6 + margin * 2 + 100);
 
-            // Canvas高度：座位高度 + 上下边距 + 银幕空间
-            const requiredHeight = Math.max(600, cinemaConfig.rows * rowHeight + margin * 2 + 80);
+            // Canvas高度：从弧心到最后一排 + 上下边距
+            const requiredHeight = Math.max(600, maxRadius * 0.8 + margin * 2 + 80);
 
             // 更新Canvas尺寸
             canvas.width = requiredWidth;
@@ -942,51 +940,86 @@
             const seatSize = 25;
             const seatGap = 3;
 
-            // 计算弧形参数
+            // 弧形影院参数
             const centerX = canvasWidth / 2;
-            const startY = margin + 80;
-            const rowHeight = 45;
+            const screenY = margin + 40; // 银幕位置
+
+            // 弧形计算参数
+            const baseRadius = canvasWidth * 0.8; // 基础弧形半径
+            const arcCenter = {
+                x: centerX,
+                y: screenY - baseRadius * 0.3 // 弧心位置，在银幕上方
+            };
+
+            // 绘制银幕（弧形）
+            ctx.strokeStyle = '#34495e';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(arcCenter.x, arcCenter.y, baseRadius * 0.2, Math.PI * 0.3, Math.PI * 0.7);
+            ctx.stroke();
+
+            // 添加银幕标识
+            ctx.fillStyle = '#34495e';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('🎬 银 幕 SCREEN 🎬', centerX, screenY + 20);
 
             for (let row = 0; row < cinemaConfig.rows; row++) {
                 if (!seats[row]) continue;
 
-                // 计算弧形偏移
-                const arcOffset = Math.pow(row * 0.15, 2) * 20;
-                const rowWidth = (cinemaConfig.seatsPerRow * (seatSize + seatGap)) - seatGap;
-                const startX = centerX - rowWidth / 2 + arcOffset * (row % 2 === 0 ? -1 : 1) * 0.5;
+                // 计算当前排的弧形半径（越往后排半径越大）
+                const currentRadius = baseRadius * 0.4 + row * 35;
+
+                // 计算弧形角度范围（根据图片的弧度）
+                const maxAngle = Math.PI * 0.4; // 总角度范围约72度
+                const startAngle = (Math.PI - maxAngle) / 2; // 起始角度
+                const angleStep = maxAngle / (cinemaConfig.seatsPerRow - 1); // 每个座位的角度间隔
 
                 for (let col = 0; col < cinemaConfig.seatsPerRow; col++) {
                     if (!seats[row][col]) continue;
 
                     const seat = seats[row][col];
-                    const x = startX + col * (seatSize + seatGap);
-                    const y = startY + row * rowHeight;
+
+                    // 计算当前座位的角度
+                    const currentAngle = startAngle + col * angleStep;
+
+                    // 根据角度和半径计算座位位置（极坐标转直角坐标）
+                    const x = arcCenter.x + Math.cos(currentAngle) * currentRadius;
+                    const y = arcCenter.y + Math.sin(currentAngle) * currentRadius;
 
                     // 更新座位坐标信息
-                    seat.x = x;
-                    seat.y = y;
+                    seat.x = x - seatSize / 2; // 居中对齐
+                    seat.y = y - seatSize / 2; // 居中对齐
                     seat.width = seatSize;
                     seat.height = seatSize;
 
                     // 绘制座位
-                    drawSeat(seat, x, y, seatSize);
+                    drawSeat(seat, seat.x, seat.y, seatSize);
 
-                    // 绘制座位号
+                    // 绘制座位号（根据弧形角度调整文本方向）
                     ctx.fillStyle = '#2c3e50';
                     ctx.font = '10px Arial';
                     ctx.textAlign = 'center';
-                    ctx.fillText(`${seat.row}-${seat.col}`, x + seatSize / 2, y + seatSize / 2 + 3);
+                    ctx.save();
+
+                    // 根据角度轻微旋转文本，让其更适应弧形
+                    const textRotation = (currentAngle - Math.PI / 2) * 0.2;
+                    ctx.translate(x, y);
+                    ctx.rotate(textRotation);
+                    ctx.fillText(`${seat.row}-${seat.col}`, 0, 3);
+                    ctx.restore();
                 }
-            }
 
-            // 绘制排号
-            ctx.fillStyle = '#7f8c8d';
-            ctx.font = 'bold 14px Arial';
-            ctx.textAlign = 'left';
+                // 绘制排号（在弧形的左侧）
+                const rowLabelAngle = startAngle - 0.2; // 排号角度
+                const rowLabelRadius = currentRadius - 25; // 排号半径
+                const labelX = arcCenter.x + Math.cos(rowLabelAngle) * rowLabelRadius;
+                const labelY = arcCenter.y + Math.sin(rowLabelAngle) * rowLabelRadius;
 
-            for (let row = 0; row < cinemaConfig.rows; row++) {
-                const y = startY + row * rowHeight + seatSize / 2 + 5;
-                ctx.fillText(`第${row + 1}排`, 10, y);
+                ctx.fillStyle = '#7f8c8d';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`第${row + 1}排`, labelX, labelY);
             }
         }
 
