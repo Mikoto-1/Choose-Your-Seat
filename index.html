@@ -50,7 +50,7 @@
 
         .cinema-section {
             flex: 2;
-            min-width: 800px;
+            min-width: 960px;
             overflow: auto;
             /* 添加滚动条支持 */
         }
@@ -78,15 +78,18 @@
             background: #f8f9fa;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             cursor: pointer;
-            max-width: 100%;
-            max-height: 100vh;
-            width: 1200px;
-            height: 800px;
-            object-fit: contain;
-            /* 确保Canvas不会超出容器 */
+
+            /* 固定尺寸，移除所有缩放相关属性 */
+            width: 960px !important;
+            height: 720px !important;
+
+            /* 移除这些属性 */
+            /* max-width: 100%; */
+            /* max-height: 100vh; */
+            /* object-fit: contain; */
+
             display: block;
             margin: 0 auto;
-            /* 居中显示 */
         }
 
         .legend {
@@ -569,18 +572,19 @@
 
             .cinema-section {
                 min-width: auto;
+                /* 允许水平滚动而不是缩放 Canvas */
+                overflow-x: auto;
             }
 
             .control-section {
                 min-width: auto;
             }
 
+            /* 完全移除 Canvas 的响应式缩放 */
             #cinemaCanvas {
-                max-width: 100%;
-                max-height: 70vh;
-                width: auto;
-                height: auto;
-                object-fit: contain;
+                /* 保持固定尺寸，允许滚动 */
+                width: 960px !important;
+                height: 720px !important;
             }
         }
     </style>
@@ -608,7 +612,7 @@
         <div class="main-content">
             <div class="cinema-section">
                 <div class="screen">🎥 银幕 SCREEN 🎥</div>
-                <canvas id="cinemaCanvas" width="1200" height="800"></canvas>
+                <canvas id="cinemaCanvas" width="960" height="720"></canvas>
                 <div class="legend">
                     <div class="legend-item">
                         <div class="legend-color" style="background-color: #27ae60;"></div>
@@ -915,8 +919,8 @@
             const seatSize = 25;
 
             // 使用完全固定的Canvas尺寸，确保所有情况下座位大小一致
-            const fixedCanvasWidth = 1200; // 固定Canvas宽度
-            const fixedCanvasHeight = 800; // 固定Canvas高度
+            const fixedCanvasWidth = 960; // 固定Canvas宽度
+            const fixedCanvasHeight = 720; // 固定Canvas高度
 
             // 更新Canvas实际尺寸
             canvas.width = fixedCanvasWidth;
@@ -932,10 +936,10 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             // 使用固定的Canvas尺寸和布局参数
-            const canvasWidth = 1200; // 固定Canvas宽度
-            const canvasHeight = 800; // 固定Canvas高度
+            const canvasWidth = 960; // 固定Canvas宽度
+            const canvasHeight = 720; // 固定Canvas高度
             const margin = 50;
-            const seatSize = 32;
+            const seatSize = 25;
             const seatGap = 3;
 
             // 弧形影院参数
@@ -943,7 +947,7 @@
             const screenY = 80; // 银幕位置贴近画布上方
 
             // 弧形计算参数 - 调整基础半径以适应更松散的布局
-            const baseRadius = 4000; // 增大基础半径以提供更多空间
+            const baseRadius = 3200; // 增大基础半径以提供更多空间
             const screenRadius = baseRadius * 0.48; // 减小银幕弧线半径，让布局更紧凑
             const arcCenter = {
                 x: centerX,
@@ -2054,7 +2058,7 @@
             if (element) {
                 element.textContent = message;
                 element.classList.add('show');
-                // 2秒后自动隐藏
+                //  2秒后自动隐藏
                 setTimeout(() => {
                     element.classList.remove('show');
                 }, 2000);
