@@ -79,8 +79,11 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             cursor: pointer;
             max-width: 100%;
+            max-height: 100vh;
+            width: 1200px;
+            height: 800px;
+            object-fit: contain;
             /* 确保Canvas不会超出容器 */
-            height: auto;
             display: block;
             margin: 0 auto;
             /* 居中显示 */
@@ -573,8 +576,11 @@
             }
 
             #cinemaCanvas {
-                width: 100%;
+                max-width: 100%;
+                max-height: 70vh;
+                width: auto;
                 height: auto;
+                object-fit: contain;
             }
         }
     </style>
@@ -602,7 +608,7 @@
         <div class="main-content">
             <div class="cinema-section">
                 <div class="screen">🎥 银幕 SCREEN 🎥</div>
-                <canvas id="cinemaCanvas" width="800" height="600"></canvas>
+                <canvas id="cinemaCanvas" width="1200" height="800"></canvas>
                 <div class="legend">
                     <div class="legend-item">
                         <div class="legend-color" style="background-color: #27ae60;"></div>
@@ -908,71 +914,76 @@
             const margin = 50;
             const seatSize = 25;
 
-            // 弧形布局尺寸计算
-            const baseRadius = 800 * 0.8; // 基础弧形半径
-            const maxRadius = baseRadius * 0.4 + (cinemaConfig.rows - 1) * 35; // 最后一排的半径
+            // 使用完全固定的Canvas尺寸，确保所有情况下座位大小一致
+            const fixedCanvasWidth = 1200; // 固定Canvas宽度
+            const fixedCanvasHeight = 800; // 固定Canvas高度
 
-            // Canvas宽度：需要容纳整个弧形 + 左右边距 + 排号空间
-            const requiredWidth = Math.max(800, maxRadius * 1.6 + margin * 2 + 100);
+            // 更新Canvas实际尺寸
+            canvas.width = fixedCanvasWidth;
+            canvas.height = fixedCanvasHeight;
 
-            // Canvas高度：从弧心到最后一排 + 上下边距
-            const requiredHeight = Math.max(600, maxRadius * 0.8 + margin * 2 + 80);
-
-            // 更新Canvas尺寸
-            canvas.width = requiredWidth;
-            canvas.height = requiredHeight;
-
-            // 更新Canvas样式，保持最大宽度限制
-            const maxDisplayWidth = Math.min(requiredWidth, 1000); // 最大显示宽度
-            const displayHeight = (requiredHeight * maxDisplayWidth) / requiredWidth;
-
-            canvas.style.width = maxDisplayWidth + 'px';
-            canvas.style.height = displayHeight + 'px';
+            // 固定显示尺寸，1:1显示比例
+            canvas.style.width = fixedCanvasWidth + 'px';
+            canvas.style.height = fixedCanvasHeight + 'px';
         }
 
         // 绘制影院布局
         function drawCinema() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            const canvasWidth = canvas.width;
-            const canvasHeight = canvas.height;
+            // 使用固定的Canvas尺寸和布局参数
+            const canvasWidth = 1200; // 固定Canvas宽度
+            const canvasHeight = 800; // 固定Canvas高度
             const margin = 50;
-            const seatSize = 25;
+            const seatSize = 32;
             const seatGap = 3;
 
             // 弧形影院参数
             const centerX = canvasWidth / 2;
-            const screenY = margin + 40; // 银幕位置
+            const screenY = 80; // 银幕位置贴近画布上方
 
-            // 弧形计算参数
-            const baseRadius = canvasWidth * 0.8; // 基础弧形半径
+            // 弧形计算参数 - 调整基础半径以适应更松散的布局
+            const baseRadius = 4000; // 增大基础半径以提供更多空间
+            const screenRadius = baseRadius * 0.48; // 减小银幕弧线半径，让布局更紧凑
             const arcCenter = {
                 x: centerX,
-                y: screenY - baseRadius * 0.3 // 弧心位置，在银幕上方
+                // 调整圆心位置：让银幕弧线贴近顶部，同时确保座位布局合理
+                y: screenY - screenRadius  // 银幕弧线最高点在screenY位置
             };
 
-            // 绘制银幕（弧形）
+            // 计算座位的弧形角度范围，银幕将使用相同的角度
+            const maxAngle = Math.PI / 8; // 36度，与座位相同
+            const startAngle = (Math.PI - maxAngle) / 2; // 起始角度
+            const endAngle = startAngle + maxAngle; // 结束角度
+
+            // 绘制银幕（弧形）- 使用与座位相同的圆心角
             ctx.strokeStyle = '#34495e';
             ctx.lineWidth = 4;
             ctx.beginPath();
-            ctx.arc(arcCenter.x, arcCenter.y, baseRadius * 0.2, Math.PI * 0.3, Math.PI * 0.7);
+            ctx.arc(arcCenter.x, arcCenter.y, screenRadius, startAngle, endAngle);
             ctx.stroke();
 
             // 添加银幕标识
             ctx.fillStyle = '#34495e';
             ctx.font = 'bold 16px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText('🎬 银 幕 SCREEN 🎬', centerX, screenY + 20);
+            // ctx.fillText('🎬 银 幕 SCREEN 🎬', centerX, screenY + 20);
 
             for (let row = 0; row < cinemaConfig.rows; row++) {
                 if (!seats[row]) continue;
 
-                // 计算当前排的弧形半径（越往后排半径越大）
-                const currentRadius = baseRadius * 0.4 + row * 35;
+                // 计算当前排的弧形半径（增大行间距使座位更松散）
+                // 对于200座位（10排），第1排和第10排的半径比应为5:6
+                // 设第1排半径为R，第10排半径为1.2R
+                // currentRadius = baseRadius * 0.5 + row * increment
+                // 第1排（row=0）: R = baseRadius * 0.5
+                // 第10排（row=9）: 1.2R = baseRadius * 0.5 + 9 * increment
+                // 因此：increment = (1.2R - R) / 9 = 0.2R / 9 = 0.2 * baseRadius * 0.5 / 9
+                // 增大increment系数以增加行间距
+                const increment = 0.01 * baseRadius; // 从0.2增加到0.3
+                const currentRadius = baseRadius * 0.5 + row * increment;
 
-                // 计算弧形角度范围（根据图片的弧度）
-                const maxAngle = Math.PI * 0.4; // 总角度范围约72度
-                const startAngle = (Math.PI - maxAngle) / 2; // 起始角度
+                // 使用与银幕相同的角度范围
                 const angleStep = maxAngle / (cinemaConfig.seatsPerRow - 1); // 每个座位的角度间隔
 
                 for (let col = 0; col < cinemaConfig.seatsPerRow; col++) {
@@ -1010,16 +1021,24 @@
                     ctx.restore();
                 }
 
-                // 绘制排号（在弧形的左侧）
-                const rowLabelAngle = startAngle - 0.2; // 排号角度
-                const rowLabelRadius = currentRadius - 25; // 排号半径
+                // 绘制排号（在弧形的左侧，调整位置适应更松散的布局）
+                const rowLabelAngle = startAngle - 0.02; // 稍微远离座位，让排号更清晰
+                const rowLabelRadius = currentRadius + 10; // 增大间距，让排号更明显
                 const labelX = arcCenter.x + Math.cos(rowLabelAngle) * rowLabelRadius;
                 const labelY = arcCenter.y + Math.sin(rowLabelAngle) * rowLabelRadius;
 
-                ctx.fillStyle = '#7f8c8d';
-                ctx.font = 'bold 14px Arial';
+                ctx.fillStyle = '#2c3e50'; // 使用更深的颜色，增强可读性
+                ctx.font = 'bold 16px Arial'; // 稍微增大字体
                 ctx.textAlign = 'center';
-                ctx.fillText(`第${row + 1}排`, labelX, labelY);
+                // 清晰地显示排号，row=0是离银幕最近的第1排
+                ctx.fillText(`${row + 1}排`, labelX, labelY);
+
+                // 在右侧也显示排号，让排的边界更清楚
+                const rightLabelAngle = endAngle + 0.02; // 右侧排号角度
+                const rightLabelX = arcCenter.x + Math.cos(rightLabelAngle) * rowLabelRadius;
+                const rightLabelY = arcCenter.y + Math.sin(rightLabelAngle) * rowLabelRadius;
+                ctx.textAlign = 'center';
+                ctx.fillText(`${row + 1}排`, rightLabelX, rightLabelY);
             }
         }
 
