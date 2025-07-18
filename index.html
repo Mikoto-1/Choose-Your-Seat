@@ -637,6 +637,21 @@
         <div class="main-content">
             <div class="cinema-section">
                 <div class="screen">🎥 银幕 SCREEN 🎥</div>
+                <!-- 影院配置 -->
+                <div class="config-section">
+                    <h3>🏛️ 影院配置</h3>
+                    <div class="cinema-config">
+                        <div class="form-group">
+                            <label for="totalSeats">总座位数</label>
+                            <select id="totalSeats">
+                                <option value="100">100座</option>
+                                <option value="200" selected>200座</option>
+                                <option value="300">300座</option>
+                            </select>
+                        </div>
+                        <button class="btn" onclick="updateCinemaLayout()">更新布局</button>
+                    </div>
+                </div>
                 <canvas id="cinemaCanvas" width="960" height="720"></canvas>
                 <div class="legend">
                     <div class="legend-item">
@@ -677,6 +692,11 @@
                         </div>
                         <span>年龄限制</span>
                     </div>
+                </div>
+                <!-- 选座信息 -->
+                <div class="selected-seats" id="selectedSeatsInfo">
+                    <h4>📍 已选座位</h4>
+                    <div class="seat-info" id="seatDetails">请选择座位</div>
                 </div>
             </div>
 
@@ -719,11 +739,6 @@
                         <button class="btn btn-success" onclick="autoSelectSeats()">🤖 自动选座</button>
                         <button class="btn" onclick="clearSelection()">🧹 清空选择</button>
                     </div>
-                </div>
-                <!-- 选座信息 -->
-                <div class="selected-seats" id="selectedSeatsInfo">
-                    <h4>📍 已选座位</h4>
-                    <div class="seat-info" id="seatDetails">请选择座位</div>
                 </div>
 
                 <!-- 用户票据信息 -->
@@ -783,22 +798,6 @@
                         <button class="btn btn-success" onclick="purchaseTickets()">💳 直接购票</button>
                         <button class="btn btn-danger" onclick="cancelReservation()">❌ 取消预订</button>
                         <button class="btn btn-danger" onclick="refundTickets()">💸 退票</button>
-                    </div>
-                </div>
-
-                <!-- 影院配置 -->
-                <div class="config-section">
-                    <h3>🏛️ 影院配置</h3>
-                    <div class="cinema-config">
-                        <div class="form-group">
-                            <label for="totalSeats">总座位数</label>
-                            <select id="totalSeats">
-                                <option value="100">100座</option>
-                                <option value="200" selected>200座</option>
-                                <option value="300">300座</option>
-                            </select>
-                        </div>
-                        <button class="btn" onclick="updateCinemaLayout()">更新布局</button>
                     </div>
                 </div>
             </div>
