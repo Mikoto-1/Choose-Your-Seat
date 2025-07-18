@@ -693,10 +693,6 @@
                                 <option value="300">300座</option>
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label for="seatsPerRow">每排座位数</label>
-                            <input type="number" id="seatsPerRow" value="20" min="10" max="25">
-                        </div>
                         <button class="btn" onclick="updateCinemaLayout()">更新布局</button>
                     </div>
                 </div>
@@ -2000,15 +1996,9 @@
         // 更新影院布局
         function updateCinemaLayout() {
             const totalSeats = parseInt(document.getElementById('totalSeats').value);
-            const seatsPerRow = parseInt(document.getElementById('seatsPerRow').value);
-
-            if (seatsPerRow < 10 || seatsPerRow > 25) {
-                alert('每排座位数应在10-25之间！');
-                return;
-            }
 
             cinemaConfig.totalSeats = totalSeats;
-            cinemaConfig.seatsPerRow = seatsPerRow;
+            // 每排座位数固定为20座
 
             // 重新初始化
             initializeSeats();
@@ -2025,7 +2015,7 @@
             drawCinema();
             updateTotalPrice();
 
-            alert(`影院布局已更新：${totalSeats}座，每排${seatsPerRow}座`);
+            alert(`影院布局已更新：${totalSeats}座，每排20座`);
         }
 
         // 添加模拟的已售座位数据
