@@ -427,6 +427,71 @@ function initializeUserSystem() {
 }
 ```
 
+### 8. 团体票成员信息显示错误
+
+**问题描述**: 团体票预订/购票时，"我的票据"信息栏显示的购票人信息全部为第一个成员，而不是各座位对应的成员信息。
+
+**原因分析**:
+
+- `reserveTickets()`和`purchaseTickets()`函数中团体票处理逻辑有误
+- 所有座位都使用第一个成员（`memberName0`）的信息
+- 缺少座位与成员的正确映射关系
+
+**解决方案**:
+
+```javascript
+// 修复团体票座位-成员信息映射
+selectedSeats.forEach((seat, index) => {
+    // ... 其他逻辑
+    
+    if (ticketType === 'individual') {
+        // 个人票处理逻辑
+    } else {
+        // 团体票，为每个座位分配对应的成员信息
+        const memberIndex = index % parseInt(document.getElementById('groupSize').value);
+        const name = document.getElementById(`memberName${memberIndex}`).value.trim();
+        const age = parseInt(document.getElementById(`memberAge${memberIndex}`).value);
+        ticketInfo = { name: name + '(团体)', age, timestamp, seat, userId: currentUser.username };
+    }
+    
+    // ... 后续处理
+});
+```
+
+**修复效果**: 现在团体票中每个座位都显示正确的购票人姓名，不再全部显示第一个成员信息。
+
+### 9. 已预订票付款状态转换问题
+
+**问题描述**: 用户为已预订的票付款时，座位状态变为已购买，但"我的票据"中没有将其从"我的预订"中删除，导致重复显示。
+
+**原因分析**:
+
+- `purchaseTickets()`函数删除了内存中的预订记录，但未删除localStorage中的预订记录
+- `currentUser.tickets`数组中仍保留`status: 'reserved'`的记录
+- 数据不一致导致界面显示错误
+
+**解决方案**:
+
+```javascript
+// 在purchaseTickets()函数中添加删除预订记录的逻辑
+selectedSeats.forEach((seat, index) => {
+    soldSeats.add(seat.number);
+    reservedSeats.delete(seat.number);
+    userTickets.reserved.delete(seat.number);
+
+    // 从用户票据记录中删除之前的预订记录（如果存在）
+    if (currentUser.tickets) {
+        currentUser.tickets = currentUser.tickets.filter(t =>
+            !(t.seatNumber === seat.number && t.status === 'reserved')
+        );
+    }
+
+    // ... 添加新的购票记录
+});
+```
+
+**修复效果**: 现在付款流程完全正确，座位从"我的预订"转移到"我的购票"，不会重复显示。
+
 ## 📚 参考资料
 
 ### 1. 技术文档
@@ -547,10 +612,10 @@ function initializeUserSystem() {
 
 ---
 
-**项目完成时间**: 2025年7月18日  
-**文档版本**: v1.0  
+**项目完成时间**: 2025年7月21日  
+**文档版本**: v1.3.1-stable  
 **总开发时长**: 约30天  
 **代码行数**: 2400+ 行  
-**功能完成度**: 98%  
+**功能完成度**: 99%  
 
 这个项目成功实现了一个功能完整、用户体验良好的电影院选座系统，在技术实现和用户体验方面都达到了预期目标。

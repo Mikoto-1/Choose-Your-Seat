@@ -758,7 +758,7 @@
                         <p>• 少年(15岁以下)：不能坐前3排</p>
                         <p>• 老年人(60岁以上)：不能坐后3排</p>
                         <p>• 成年人：无限制</p>
-                        <p>• 团体票：任一成员受限则该座位不可选</p>
+                        <p>• 团体票：最多20人，成员不能分开坐要坐同一排，任一成员受限则该座位不可选</p>
                     </div>
 
                     <!-- 票价信息 -->
@@ -1735,7 +1735,7 @@
             const timestamp = new Date().toLocaleString();
 
             // 将选中的座位添加到预订列表和用户票据
-            selectedSeats.forEach(seat => {
+            selectedSeats.forEach((seat, index) => {
                 reservedSeats.add(seat.number);
 
                 let ticketInfo;
@@ -1744,9 +1744,10 @@
                     const age = parseInt(document.getElementById('customerAge').value);
                     ticketInfo = { name, age, timestamp, seat, userId: currentUser.username };
                 } else {
-                    // 团体票，使用第一个成员的信息作为代表
-                    const name = document.getElementById('memberName0').value.trim();
-                    const age = parseInt(document.getElementById('memberAge0').value);
+                    // 团体票，为每个座位分配对应的成员信息
+                    const memberIndex = index % parseInt(document.getElementById('groupSize').value);
+                    const name = document.getElementById(`memberName${memberIndex}`).value.trim();
+                    const age = parseInt(document.getElementById(`memberAge${memberIndex}`).value);
                     ticketInfo = { name: name + '(团体)', age, timestamp, seat, userId: currentUser.username };
                 }
 
@@ -1801,10 +1802,17 @@
                 const timestamp = new Date().toLocaleString();
 
                 // 将选中的座位添加到已售列表和用户票据
-                selectedSeats.forEach(seat => {
+                selectedSeats.forEach((seat, index) => {
                     soldSeats.add(seat.number);
                     reservedSeats.delete(seat.number); // 如果之前是预订状态，移除预订
                     userTickets.reserved.delete(seat.number); // 从用户预订中移除
+
+                    // 从用户票据记录中删除之前的预订记录（如果存在）
+                    if (currentUser.tickets) {
+                        currentUser.tickets = currentUser.tickets.filter(t =>
+                            !(t.seatNumber === seat.number && t.status === 'reserved')
+                        );
+                    }
 
                     let ticketInfo;
                     if (ticketType === 'individual') {
@@ -1812,9 +1820,10 @@
                         const age = parseInt(document.getElementById('customerAge').value);
                         ticketInfo = { name, age, timestamp, seat, userId: currentUser.username };
                     } else {
-                        // 团体票，使用第一个成员的信息作为代表
-                        const name = document.getElementById('memberName0').value.trim();
-                        const age = parseInt(document.getElementById('memberAge0').value);
+                        // 团体票，为每个座位分配对应的成员信息
+                        const memberIndex = index % parseInt(document.getElementById('groupSize').value);
+                        const name = document.getElementById(`memberName${memberIndex}`).value.trim();
+                        const age = parseInt(document.getElementById(`memberAge${memberIndex}`).value);
                         ticketInfo = { name: name + '(团体)', age, timestamp, seat, userId: currentUser.username };
                     }
 
@@ -2022,10 +2031,15 @@
             // 重新初始化
             initializeSeats();
             selectedSeats = [];
-            reservedSeats.clear();
-            soldSeats.clear();
-            userTickets.reserved.clear();
-            userTickets.purchased.clear();
+
+            // 如果用户已登录，保持其票据数据不变
+            if (!currentUser) {
+                // 只有未登录时才清空票据数据
+                reservedSeats.clear();
+                soldSeats.clear();
+                userTickets.reserved.clear();
+                userTickets.purchased.clear();
+            }
 
             // 添加模拟的已售座位
             addMockSoldSeats();
@@ -2043,34 +2057,48 @@
             const totalSeats = cinemaConfig.totalSeats;
             const soldCount = Math.floor(totalSeats * 0.10);
 
-            // 清空现有数据
-            soldSeats.clear();
-            reservedSeats.clear();
-            userTickets.purchased.clear();
-            userTickets.reserved.clear();
+            // 保存用户真实票据数据
+            const userReserved = new Set(userTickets.reserved.keys());
+            const userPurchased = new Set(userTickets.purchased.keys());
 
-            // 随机选择座位作为已售
-            const seatNumbers = [];
+            // 清空现有模拟数据，但保留用户真实数据
+            const tempSoldSeats = new Set();
+            const tempReservedSeats = new Set();
+
+            // 添加用户真实数据
+            userReserved.forEach(seatNumber => tempReservedSeats.add(seatNumber));
+            userPurchased.forEach(seatNumber => tempSoldSeats.add(seatNumber));
+
+            // 随机选择座位作为已售（排除用户已有的座位）
+            const availableSeatNumbers = [];
             for (let i = 1; i <= totalSeats; i++) {
-                seatNumbers.push(i);
+                if (!userReserved.has(i) && !userPurchased.has(i)) {
+                    availableSeatNumbers.push(i);
+                }
             }
 
             // 打乱数组
-            for (let i = seatNumbers.length - 1; i > 0; i--) {
+            for (let i = availableSeatNumbers.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [seatNumbers[i], seatNumbers[j]] = [seatNumbers[j], seatNumbers[i]];
+                [availableSeatNumbers[i], availableSeatNumbers[j]] = [availableSeatNumbers[j], availableSeatNumbers[i]];
             }
 
-            // 选择前soldCount个座位作为已售
-            for (let i = 0; i < soldCount; i++) {
-                soldSeats.add(seatNumbers[i]);
+            // 选择模拟已售座位（不能超过可用座位数）
+            const maxMockSold = Math.min(soldCount - userPurchased.size, availableSeatNumbers.length);
+            for (let i = 0; i < maxMockSold; i++) {
+                tempSoldSeats.add(availableSeatNumbers[i]);
             }
 
-            // 添加一些预订座位（约5%）
+            // 添加一些模拟预订座位（约5%，排除已售和已预订的）
             const reservedCount = Math.floor(totalSeats * 0.05);
-            for (let i = soldCount; i < soldCount + reservedCount && i < seatNumbers.length; i++) {
-                reservedSeats.add(seatNumbers[i]);
+            const maxMockReserved = Math.min(reservedCount - userReserved.size, availableSeatNumbers.length - maxMockSold);
+            for (let i = maxMockSold; i < maxMockSold + maxMockReserved && i < availableSeatNumbers.length; i++) {
+                tempReservedSeats.add(availableSeatNumbers[i]);
             }
+
+            // 更新全局变量
+            soldSeats = tempSoldSeats;
+            reservedSeats = tempReservedSeats;
         }
 
         // 用户系统相关函数
@@ -2187,6 +2215,9 @@
             currentUser = users[username];
             localStorage.setItem('currentUser', username);
 
+            // 恢复用户票据数据到内存
+            loadUserTicketsFromStorage();
+
             showSuccessMessage('loginSuccess', `🎉 登录成功！欢迎回来，${username}！`);
             setTimeout(() => {
                 closeLoginModal();
@@ -2300,12 +2331,20 @@
         function logout() {
             currentUser = null;
             localStorage.removeItem('currentUser');
+
+            // 清空用户票据数据
+            userTickets.reserved.clear();
+            userTickets.purchased.clear();
+
             updateUserUI();
             refreshUserTickets();
 
             // 清空当前选择的座位
             selectedSeats = [];
             updateSelectedSeatsDisplay();
+
+            // 重新生成模拟数据
+            addMockSoldSeats();
             drawCinema();
             updateTotalPrice();
         }
@@ -2338,6 +2377,8 @@
                 const users = JSON.parse(localStorage.getItem('cinemaUsers') || '{}');
                 if (users[currentUsername]) {
                     currentUser = users[currentUsername];
+                    // 恢复用户票据数据
+                    loadUserTicketsFromStorage();
                 } else {
                     // 用户数据不存在，清除登录状态
                     localStorage.removeItem('currentUser');
@@ -2345,6 +2386,33 @@
             }
 
             updateUserUI();
+        }
+
+        // 从存储中恢复用户票据数据
+        function loadUserTicketsFromStorage() {
+            if (!currentUser || !currentUser.tickets) {
+                return;
+            }
+
+            // 清空现有票据数据
+            userTickets.reserved.clear();
+            userTickets.purchased.clear();
+            reservedSeats.clear();
+            soldSeats.clear();
+
+            // 从用户数据中恢复票据信息
+            currentUser.tickets.forEach(ticket => {
+                if (ticket.status === 'reserved') {
+                    userTickets.reserved.set(ticket.seatNumber, ticket);
+                    reservedSeats.add(ticket.seatNumber);
+                } else if (ticket.status === 'purchased') {
+                    userTickets.purchased.set(ticket.seatNumber, ticket);
+                    soldSeats.add(ticket.seatNumber);
+                }
+            });
+
+            // 重新添加模拟数据（排除用户自己的座位）
+            addMockSoldSeats();
         }
 
         // 刷新用户票据显示
