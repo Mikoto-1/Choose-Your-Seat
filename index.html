@@ -758,7 +758,7 @@
                         <p>• 少年(15岁以下)：不能坐前3排</p>
                         <p>• 老年人(60岁以上)：不能坐后3排</p>
                         <p>• 成年人：无限制</p>
-                        <p>• 团体票：最多20人，成员不能分开坐要坐同一排，任一成员受限则该座位不可选</p>
+                        <p>• 团体票：最多20人，选择的座位数要求等于团体人数，成员不能分开坐要坐同一排，任一成员受限则该座位不可选</p>
                     </div>
 
                     <!-- 票价信息 -->
@@ -1713,6 +1713,51 @@
             alert('个人信息已清空！');
         }
 
+        // 验证团体票规则
+        function validateGroupTicketRules() {
+            const ticketType = document.getElementById('ticketType').value;
+
+            if (ticketType !== 'group') {
+                return true; // 个人票不需要验证团体规则
+            }
+
+            const groupSize = parseInt(document.getElementById('groupSize').value);
+
+            if (!groupSize || groupSize < 2 || groupSize > 20) {
+                alert('请输入有效的团体人数（2-20人）！');
+                return false;
+            }
+
+            // 检查选中座位数量是否等于团体人数
+            if (selectedSeats.length !== groupSize) {
+                alert(`团体票选座数量必须等于团体人数！\n当前选择了 ${selectedSeats.length} 个座位，但团体人数为 ${groupSize} 人。`);
+                return false;
+            }
+
+            // 检查所有座位是否在同一排
+            if (selectedSeats.length > 1) {
+                const firstRow = selectedSeats[0].row;
+                const allInSameRow = selectedSeats.every(seat => seat.row === firstRow);
+
+                if (!allInSameRow) {
+                    const rows = [...new Set(selectedSeats.map(seat => seat.row))].sort((a, b) => a - b);
+                    alert(`团体票座位必须在同一排！\n当前选择的座位分布在第 ${rows.join('、')} 排，请重新选择同一排的连续座位。`);
+                    return false;
+                }
+
+                // 检查座位是否连续（按列号排序后检查）
+                const sortedSeats = selectedSeats.sort((a, b) => a.col - b.col);
+                for (let i = 1; i < sortedSeats.length; i++) {
+                    if (sortedSeats[i].col !== sortedSeats[i - 1].col + 1) {
+                        alert('团体票座位必须是连续的！请选择同一排的连续座位。');
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
         // 预订票
         function reserveTickets() {
             // 检查用户是否已登录
@@ -1728,6 +1773,11 @@
             }
 
             if (!validateCustomerInfo()) {
+                return;
+            }
+
+            // 验证团体票规则
+            if (!validateGroupTicketRules()) {
                 return;
             }
 
@@ -1791,6 +1841,11 @@
             }
 
             if (!validateCustomerInfo()) {
+                return;
+            }
+
+            // 验证团体票规则
+            if (!validateGroupTicketRules()) {
                 return;
             }
 
