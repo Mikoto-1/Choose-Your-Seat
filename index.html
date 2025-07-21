@@ -1537,7 +1537,9 @@
                 endRow = cinemaConfig.rows - 3; // 有老年人，不能坐后三排
             }
 
-            // 查找连续的座位
+            // 收集所有可能的连续座位组合
+            const availableGroups = [];
+
             for (let row = startRow; row <= endRow; row++) {
                 if (!seats[row - 1]) continue;
 
@@ -1556,16 +1558,53 @@
                     }
 
                     if (allAvailable) {
-                        selectedSeats = consecutiveSeats;
-                        updateSelectedSeatsDisplay();
-                        drawCinema();
-                        updateTotalPrice();
-                        return;
+                        // 计算这组座位的中心位置到影院中心的距离
+                        const centerCol = Math.ceil(cinemaConfig.seatsPerRow / 2);
+                        const centerRow = Math.ceil(cinemaConfig.rows / 2);
+
+                        // 计算座位组的中心位置
+                        const groupCenterCol = (consecutiveSeats[0].col + consecutiveSeats[groupSize - 1].col) / 2;
+                        const groupCenterRow = consecutiveSeats[0].row;
+
+                        // 计算到影院中心的距离（水平距离权重更大，因为观影体验更重要）
+                        const horizontalDistance = Math.abs(groupCenterCol - centerCol);
+                        const verticalDistance = Math.abs(groupCenterRow - centerRow);
+                        const totalDistance = horizontalDistance * 2 + verticalDistance; // 水平距离权重为2
+
+                        availableGroups.push({
+                            seats: consecutiveSeats,
+                            distance: totalDistance,
+                            row: groupCenterRow,
+                            centerCol: groupCenterCol
+                        });
                     }
                 }
             }
 
-            alert('无法找到满足条件的连续座位！请尝试减少人数或手动选择。');
+            if (availableGroups.length === 0) {
+                alert('无法找到满足条件的连续座位！请尝试减少人数或手动选择。');
+                return;
+            }
+
+            // 按距离排序，选择最佳位置（距离中心最近）
+            availableGroups.sort((a, b) => {
+                // 首先按总距离排序
+                if (a.distance !== b.distance) {
+                    return a.distance - b.distance;
+                }
+                // 如果距离相同，优先选择更靠中间的排数
+                return Math.abs(a.row - Math.ceil(cinemaConfig.rows / 2)) - Math.abs(b.row - Math.ceil(cinemaConfig.rows / 2));
+            });
+
+            // 选择最佳座位组合
+            selectedSeats = availableGroups[0].seats;
+            updateSelectedSeatsDisplay();
+            drawCinema();
+            updateTotalPrice();
+
+            // 显示选择结果信息
+            const bestGroup = availableGroups[0];
+            console.log(`团体票自动选座：选择第${bestGroup.row}排，第${bestGroup.seats[0].col}-${bestGroup.seats[bestGroup.seats.length - 1].col}座，距离中心${bestGroup.distance.toFixed(1)}个单位`);
         }
 
         // 更新已选座位显示
