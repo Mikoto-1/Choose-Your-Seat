@@ -21,8 +21,13 @@ Thumbs.db
 *.swp
 *.swo
 
-# Node modules (if any)
+# Linting and configuration files
+eslint.config.mjs
+
+# Node modules and package files
 node_modules/
+package.json
+package-lock.json
 
 # Logs
 *.log
