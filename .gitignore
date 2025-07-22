@@ -79,3 +79,4 @@ jspm_packages/
 
 # Serverless directories
 .serverless
+.vercel/project.json

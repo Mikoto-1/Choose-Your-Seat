@@ -6,6 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>电影院选座系统</title>
     <style>
+        .movie-list-page { padding: 20px; }
+        .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 25px; margin-top: 30px; }
+        .movie-card { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.1); transition: transform 0.3s; }
+        .movie-card:hover { transform: translateY(-5px); }
+        .movie-poster { width: 100%; height: 300px; object-fit: cover; }
+        .movie-info { padding: 15px; }
+        .movie-title { font-size: 16px; font-weight: bold; margin-bottom: 8px; }
+        .movie-meta { display: flex; justify-content: space-between; color: #666; font-size: 12px; margin-bottom: 12px; }
+        .movie-rating { color: #e74c3c; font-weight: bold; }
+        .buy-ticket-btn { width: 100%; background: linear-gradient(135deg, #fe5f75 0%, #fc9842 100%); color: white; border: none; padding: 8px; border-radius: 5px; cursor: pointer; }
+
         * {
             margin: 0;
             padding: 0;
@@ -606,8 +617,31 @@
 
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🎬 电影院选座系统</h1>
+        <!-- 电影列表页面 -->
+        <div id="movieListPage" class="movie-list-page">
+            <div class="header">
+                <h1>🎬 热门电影</h1>
+                <p>选择您想观看的影片</p>
+                <div class="user-section">
+                    <!-- 用户未登录状态 -->
+                    <div id="loginSection" class="login-section">
+                        <button class="login-btn" onclick="openLoginModal()">🔑 登录 / 注册</button>
+                    </div>
+                    <!-- 用户已登录状态 -->
+                    <div id="userSection" class="user-info" style="display: none;">
+                        <div class="user-avatar" id="userAvatar">U</div>
+                        <span id="userName">用户名</span>
+                        <button class="logout-btn" onclick="logout()">退出</button>
+                    </div>
+                </div>
+            </div>
+            <div class="movie-grid" id="movieGrid"></div>
+        </div>
+
+        <!-- 选座页面 (默认隐藏) -->
+        <div id="seatSelectionPage" style="display: none;">
+            <div class="header">
+                <h1>🎬 电影院选座系统</h1>
             <p>体验最佳的观影选座服务</p>
             <div class="user-section">
                 <!-- 用户未登录状态 -->
@@ -791,6 +825,56 @@
     </div>
 
     <script>
+// 电影数据
+const movies = [
+  { id: 1, title: "流浪地球3", poster: "https://p0.meituan.net/w.h/movie/2019091615251437017.jpg@160w_220h_1e_1c", rating: 9.2, release: "2025-02-10", duration: "173分钟" },
+  { id: 2, title: "疯狂动物城2", poster: "https://p0.meituan.net/w.h/movie/2024031210482285713.jpg@160w_220h_1e_1c", rating: 8.8, release: "2025-03-01", duration: "118分钟" },
+  { id: 3, title: "沙丘2", poster: "https://p0.meituan.net/w.h/movie/2024022817534385613.jpg@160w_220h_1e_1c", rating: 8.5, release: "2024-02-28", duration: "166分钟" },
+  { id: 4, title: "功夫熊猫4", poster: "https://p0.meituan.net/w.h/movie/2024022111435383231.jpg@160w_220h_1e_1c", rating: 7.8, release: "2024-03-08", duration: "94分钟" },
+  { id: 5, title: "热辣滚烫", poster: "https://p0.meituan.net/w.h/movie/2024022017584883128.jpg@160w_220h_1e_1c", rating: 8.1, release: "2024-02-10", duration: "117分钟" },
+  { id: 6, title: "飞驰人生2", poster: "https://p0.meituan.net/w.h/movie/2024020111234681744.jpg@160w_220h_1e_1c", rating: 8.0, release: "2024-02-10", duration: "124分钟" }
+];
+
+// 渲染电影列表
+function renderMovieList() {
+  const movieGrid = document.getElementById('movieGrid');
+  if (!movieGrid) return;
+  movieGrid.innerHTML = movies.map(movie => `
+    <div class="movie-card">
+      <img src="${movie.poster}" alt="${movie.title}" class="movie-poster">
+      <div class="movie-info">
+        <h3 class="movie-title">${movie.title}</h3>
+        <div class="movie-meta">
+          <span>⭐ ${movie.rating}</span>
+          <span>${movie.duration}</span>
+        </div>
+        <div class="movie-meta">
+          <span>上映时间: ${movie.release}</span>
+        </div>
+        <button class="buy-ticket-btn" onclick="switchToSeatSelection(${movie.id})">选座购票</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// 切换到选座页面
+function switchToSeatSelection(movieId) {
+  const movie = movies.find(m => m.id === movieId);
+  if (!movie) return;
+  
+  // 更新选座页面标题
+  document.querySelector('#seatSelectionPage h1').textContent = `🎬 ${movie.title} - 选座`;
+  
+  // 显示选座页面，隐藏电影列表
+  document.getElementById('movieListPage').style.display = 'none';
+  document.getElementById('seatSelectionPage').style.display = 'block';
+  
+  // 初始化座位
+  initializeSeats();
+  drawCinema();
+}
+
+
         // 全局变量
         let canvas, ctx;
         let cinemaConfig = {
@@ -838,6 +922,9 @@
 
         // 初始化
         document.addEventListener('DOMContentLoaded', function () {
+  // 页面加载时渲染电影列表
+  renderMovieList();
+  
             canvas = document.getElementById('cinemaCanvas');
             ctx = canvas.getContext('2d');
 
